@@ -1,11 +1,13 @@
 import logging
+import sys
 from lxml import etree as ET
 import html
 import re
 import time
+import json
 
 
-loglevel=logging.DEBUG
+loglevel=logging.INFO
 set_cable_label_now = False
 
 def scrape():
@@ -17,6 +19,7 @@ def scrape():
     root = ET.parse('test2 copy.xml').getroot()
     list_of_page_elements = root.findall("diagram")
     number_of_cables = 0
+    pages = {}
     for page_elements in list_of_page_elements:
         page_name = page_elements.get('name')
         if set_cable_label_now: pass
@@ -30,12 +33,19 @@ def scrape():
             # set_cable_label=False
             # cables_list, cable_label_list = cables(page_elements, page_name,set_cable_label)
         cables_list = get_cable_list(page_elements, page_name)
+        if not cables_list:
+            logging.info(f'There are no cables on page {page_name}')
+            continue
         cable_list_length = len(cables_list)
         logging.info(f'page_name: {page_name}')
         for cable_dict in cables_list: 
             logging.info(f'(cable_dict):{cable_dict}')
         number_of_cables += cable_list_length
         logging.info(f'amount of cables: {cable_list_length}')
+        pages[page_name] = cables_list
+        with open("cables.json", "w") as f:
+            f.write(json.dumps(pages, indent=2))
+
     tree = ET.ElementTree(root)
     tree.write('output1.xml', pretty_print=True, xml_declaration=True, encoding="utf-8")
     logging.info(f'total amount of cables: {number_of_cables}')
@@ -47,11 +57,12 @@ def get_cable_elements(page_elements):
     This leads to incomplete elements where the id is cut off. To reach the id of 
     the seldom <object> elements we have to get the parent of <mxCell>.
     """
+    list_of_cable_elements = []
     list_of_cables_incomplete = page_elements.findall( ".//*[@source][@target]")
     for mxCell in list_of_cables_incomplete:
         mxCell_id = get_value_here_or_in_parent(mxCell,'id')
         if not none_or_empty(mxCell_id):
-            list_of_cable_elements = page_elements.findall('.//*[@id="'+mxCell_id+'"]')
+            list_of_cable_elements += page_elements.findall('.//*[@id="'+mxCell_id+'"]')
     return list_of_cable_elements
 
 def get_cable_list(page_elements, page_name):
@@ -62,6 +73,8 @@ def get_cable_list(page_elements, page_name):
     list_of_cable_elements = get_cable_elements(page_elements)
     cable_list = []
     device_list = []
+    if not list_of_cable_elements:
+        return None
     for cable in list_of_cable_elements:
         cable_id = get_value_here_or_in_parent(cable,'id')
         cable_source_id = get_value_here_or_in_child(cable,'source')
@@ -233,10 +246,13 @@ def get_connected_bold_text(elements,text_id):
     if not none_or_empty(cable):
         cable_id = get_value_here_or_in_parent(cable,'id')
         text_element = elements.find(".//*[@id='"+cable_dir+"']")
+        if not text_element:
+            return None
         text_dict = get(text_element)
         if not none_or_empty(text_dict.get('text')):
             if text_dict.get('text_bold'):
                 return text_dict
+    return None
 
 def get(element):
     """ get all relevant information from a text element as dict. """
@@ -365,13 +381,15 @@ def toOutputXmlFile(elements):
     with open('output.xml', 'ab') as f:
         tree.write(f, encoding='utf-8')
 
+
 if __name__ == '__main__':
     logging.basicConfig(
-        filename='path.log',
+        # filename='path.log',
         level=loglevel,
         format='%(asctime)s '
         '%(filename)s:%(lineno)s '
         '[%(funcName)s()]'
-        '%(message)s'        
+        '%(message)s',
+        stream=sys.stdout   
         )
     scrape()

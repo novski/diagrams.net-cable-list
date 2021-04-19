@@ -5,146 +5,167 @@ import re
 import time
 
 
+loglevel=logging.DEBUG
+set_cable_label_now = False
+
 def scrape():
     """
     Every page in diagrams.net has its own <root> element. 
     We iterate over pages.
     """
     logging.info('starting XML parse...')
-    root = ET.parse('test.xml').getroot()
+    root = ET.parse('test2 copy.xml').getroot()
     list_of_page_elements = root.findall("diagram")
     number_of_cables = 0
     for page_elements in list_of_page_elements:
         page_name = page_elements.get('name')
-        cables_list = cables(page_elements, page_name)
+        if set_cable_label_now: pass
+            # set_cable_label=False
+            # cables_list, cable_label_list = cables(page_elements, page_name,set_cable_label)
+            # cable_label_list.sort(reverse=True)
+            # print("cable_label_list:" + str(cable_label_list))
+            # print(f"fist item of list: {cable_label_list[0]}")
+            # set_cable_label=True
+            # cables_list, cable_label_list = cables(page_elements, page_name,set_cable_label)
+            # set_cable_label=False
+            # cables_list, cable_label_list = cables(page_elements, page_name,set_cable_label)
+        cables_list = get_cable_list(page_elements, page_name)
         cable_list_length = len(cables_list)
         logging.info(f'page_name: {page_name}')
         for cable_dict in cables_list: 
-            logging.info(f'[scrape](cable_dict):{cable_dict}')
+            logging.info(f'(cable_dict):{cable_dict}')
         number_of_cables += cable_list_length
         logging.info(f'amount of cables: {cable_list_length}')
+    tree = ET.ElementTree(root)
+    tree.write('output1.xml', pretty_print=True, xml_declaration=True, encoding="utf-8")
     logging.info(f'total amount of cables: {number_of_cables}')
     logging.info('Finished')
-    
-def toOutputXmlFile(elements):
-    """ Debug helper. Write elements to file 'output.xml'. """
-    tree = ET.ElementTree(elements)
-    ET.indent(tree, space="  ", level=0)
-    with open('output.xml', 'ab') as f:
-        tree.write(f, encoding='utf-8')
 
-def cables(page_elements, page_name):
+def get_cable_elements(page_elements):
     """
     Search for all source and target tags. 
     This leads to incomplete elements where the id is cut off. To reach the id of 
     the seldom <object> elements we have to get the parent of <mxCell>.
     """
-    cable_list = []
-    device_list = []
     list_of_cables_incomplete = page_elements.findall( ".//*[@source][@target]")
     for mxCell in list_of_cables_incomplete:
         mxCell_id = get_value_here_or_in_parent(mxCell,'id')
         if not none_or_empty(mxCell_id):
-            list_of_cables = page_elements.findall('.//*[@id="'+mxCell_id+'"]')
-            for cable in list_of_cables:
-                cable_id = get_value_here_or_in_parent(cable,'id')
-                cable_source_id = get_value_here_or_in_child(cable,'source')
-                cable_target_id = get_value_here_or_in_child(cable,'target')
-                cable_parent_id = get_value_here_or_in_child(cable,'parent')
-                if cable_source_id == cable_target_id:
-                    logging.debug(f'target_id == source_id: skipping inter box connections for design flexibility')
-                    continue
-                    cable_dict = {}
-                cable_dict = {'page_name':page_name,
-                            'cable_id':cable_id,
-                            'cable_source_id':cable_source_id,  
-                            'cable_target_id':cable_target_id,   
-                            'cable_parent_id':cable_parent_id}
-                cable_label_dict = cable_label(page_elements, cable_id)
-                source_dict = connection_text(page_elements, cable_source_id,'source')
-                #print(f'source_dict:{source_dict}')
-                target_dict = connection_text(page_elements, cable_target_id,'target')
-                #print(f'target_dict:{target_dict}')
-                cable_dict.update(cable_dict)
-                cable_dict.update(cable_label_dict)
-                cable_dict.update(source_dict)            
-                cable_dict.update(target_dict)
-                cable_list.append(cable_dict)
+            list_of_cable_elements = page_elements.findall('.//*[@id="'+mxCell_id+'"]')
+    return list_of_cable_elements
+
+def get_cable_list(page_elements, page_name):
+    """ 
+    iterate through the 'list_of_cable_elements' and search for cable_labels and connected_text elements.
+    Return a list of cable information to build exports.
+    """
+    list_of_cable_elements = get_cable_elements(page_elements)
+    cable_list = []
+    device_list = []
+    for cable in list_of_cable_elements:
+        cable_id = get_value_here_or_in_parent(cable,'id')
+        cable_source_id = get_value_here_or_in_child(cable,'source')
+        cable_target_id = get_value_here_or_in_child(cable,'target')
+        cable_parent_id = get_value_here_or_in_child(cable,'parent')
+        if cable_source_id == cable_target_id:
+            logging.debug(f'(target_id) == (source_id): skipping inter box connections for design flexibility')
+            continue
+        cable_dict = {}
+        cable_dict = {'page_name':page_name,
+                    'cable_id':cable_id,
+                    'cable_source_id':cable_source_id,  
+                    'cable_target_id':cable_target_id,   
+                    'cable_parent_id':cable_parent_id}
+        cable_dict.update(cable_dict)
+        cable_label_dict = cable_label(page_elements, cable_id)
+        cable_dict.update(cable_label_dict)
+        source_dict = get_connection_text(page_elements, cable_source_id,'source')
+        if not none_or_empty(source_dict):
+            cable_dict.update(source_dict)
+        target_dict = get_connection_text(page_elements, cable_target_id,'target')
+        if not none_or_empty(target_dict):
+            cable_dict.update(target_dict)
+        cable_list.append(cable_dict)
     logging.debug('device_list:')
     for device in device_list:
-        logging.debug(f'[cables](device_list){device}')
+        logging.debug(f'(device_list){device}')
     return cable_list
 
-def cable_label(start_element, cable_id):
+def set_new_cable_label(elements,cable_id):
+    list_of_cable_elements = get_cable_elements(elements)
+    for cable in list_of_cable_elements:
+        cable_id = get_value_here_or_in_parent(cable,'id')
+        label_elements = elements.findall(".//*[@parent='"+str(cable_id)+"']")
+
+def cable_label(elements, cable_id):
     """ 
-    Text elements are linked by a tag 'parent' to cables.
-    Here we search for attribute 'parent' to get id and value of it.
+    labels have same parent_id as cable_id. Search for all attributes 'parent' 
+    and grab all labels from their 'value' attribute.
     """
     cable_path = ".//*[@parent='"+str(cable_id)+"']"
-    label_elements = start_element.findall(cable_path)
+    label_elements = elements.findall(cable_path)
     cable_labels_dict = {}
     for counter, label_element in enumerate(label_elements):
         label_value = label_element.get('value')
-        if not none_or_empty(label_value):
-            if not label_value == '%3CmxGraphModel':
-                label_value = remove_html_tags(label_value).strip()
-                if not detect_special_characer(label_value):
-                    label_id = label_element.get('id')
-                    label_dict = {'label'+str(counter)+'_value':label_value, 'label'+str(counter)+'_id':label_id}
-                    cable_labels_dict.update(label_dict)
-                else:
-                    logging.debug(f'cable_id: {cable_id} had special characters: {label_value} and was skipped')
-            else:
-                logging.debug(f'cable_label_id:{label_element.get("id")} had strange diagrams.net string %3CmxGraphModel...')
-        else:
-            logging.debug(f'cable_id: {cable_id} had an empty value')
-    return cable_labels_dict
+        label_value = cable_label_value_restriction(label_value, label_element, cable_id)
+        label_id = label_element.get('id')
+        label_dict = {'label'+str(counter)+'_value':label_value, 'label'+str(counter)+'_id':label_id}
+        cable_labels_dict.update(label_dict)
+    return cable_labels_dict   
 
-def connection_text(elements, connection_id, prefix):
-    """ search for attribute 'id' to get value and parent id from it """
-    text_elements = elements.findall(".//*[@id='"+connection_id+"']")
-    texts_dict = {}
+def cable_label_value_restriction(label_value, label_element, cable_id):
+    """
+    labels have strange strings and html tags, we filter them and return all sanitized values.
+    """
+    if not none_or_empty(label_value):
+        if not label_value == '%3CmxGraphModel':
+            label_value = remove_html_tags(label_value).strip()
+            if not detect_special_characer(label_value):
+                return label_value
+            else:
+                logging.debug(f'[cable_label](cable_id): {cable_id} had special characters: {label_value} and was skipped')
+        else:
+            logging.debug(f'[cable_label](cable_label_id):{label_element.get("id")} had strange diagrams.net string %3CmxGraphModel...')
+    else:
+        logging.debug(f'[cable_label](cable_id): {cable_id} had an empty value')
+
+def get_connection_text(elements, connection_id, prefix):
+    """ 
+    Text elements are linked by a tag 'parent' to cables.
+    Search for attribute 'parent' to get id and value of it.
+    """
+    text_element = elements.find(".//*[@id='"+connection_id+"']")
     parents_text_list = []
     group_ids =[]
-    for text_element in text_elements:
-        text_dict = {}
-        text_dict.update(get(text_element))
-        if not text_dict:
-            continue
-        elif none_or_empty(text_dict.get('text')):
-            continue
-        elif text_dict.get('text_bold'):
-            continue
-        elif text_dict.get('text') == 'both empty':
-            continue
-        text_dict = rename_keys(text_dict,{'text':prefix+'_text'})
-        parent_id = text_dict.get('parent_id')
-        # get parent element with bold text
-        parent_element = get(elements.find(".//*[@id='"+parent_id+"']"))
-        if parent_element.get('text_bold'):
-            parents_text_list.append(parent_element)
-        # get grouped bold texts 
-        while parent_id > '1':
-            group_id, parent_id = search_in_parents_for_group_id(elements,parent_id)
-            group_ids.extend([group_id])
-        if not none_or_empty(group_ids):
-            for num,group_id in enumerate(group_ids):
-                text_dict.update({'group_id_'+str(num):group_id})
-                list_of_parent_elements_in_same_group = elements.findall(".//*[@parent='"+group_id+"']")
-                group_dict = search_text_in_elements(elements,list_of_parent_elements_in_same_group)
-                parents_text_list.extend(group_dict)
-        # get containered bold texts
-        parents_container_text_dict = search_in_parents_for_container(elements,text_dict.get('parent_id'))
-        if not none_or_empty(parents_container_text_dict):
-            parents_text_list.append(parents_container_text_dict)
-        text_dict.update({'parents':parents_text_list})
-        print(f'text_dict:{text_dict}')
-            # parent_list = parents_list.append(parents_dict)
-            # parents_dict = {prefix+'_parents':parents_list}
-            # texts_dict.update(parents_dict)
-        
-    logging.debug(f'    [connection_text](texts_dict):{texts_dict}')
-    return texts_dict
+    text_dict = {}
+    text_dict.update(get(text_element))
+    if not text_dict: return
+    elif none_or_empty(text_dict.get('text')): return
+    elif text_dict.get('text_bold'): return
+    elif text_dict.get('text') == 'both empty': return
+    text_dict = rename_keys(text_dict,{'text':prefix+'_text'})
+    parent_id = text_dict.get('parent_id')
+    # get parent element with bold text
+    parent_element = get(elements.find(".//*[@id='"+parent_id+"']"))
+    if parent_element.get('text_bold'):
+        parents_text_list.append(parent_element)
+    # get grouped bold texts 
+    while parent_id > '1':
+        group_id, parent_id = search_in_parents_for_group_id(elements,parent_id)
+        group_ids.extend([group_id])
+    if not none_or_empty(group_ids):
+        for num,group_id in enumerate(group_ids):
+            text_dict.update({'group_id_'+str(num):group_id})
+            list_of_parent_elements_in_same_group = elements.findall(".//*[@parent='"+group_id+"']")
+            group_dict = search_text_in_elements(elements,list_of_parent_elements_in_same_group)
+            parents_text_list.extend(group_dict)
+    # get containered bold texts
+    parents_container_text_dict = search_in_parents_for_container(elements,text_dict.get('parent_id'))
+    if not none_or_empty(parents_container_text_dict):
+        parents_text_list.append(parents_container_text_dict)
+    text_dict.update({prefix+'_parents':parents_text_list})
+    logging.debug(f'(texts_dict):{text_dict}')
+    return text_dict
 
 def search_in_parents_for_group_id(elements,parent_id):
     """ 
@@ -163,14 +184,15 @@ def search_in_parents_for_group_id(elements,parent_id):
 
 def search_text_in_elements(elements,list_of_parent_elements_in_same_group):
     """ 
-    get text from list of elements and append 
-    it as dict to list if it is bold. 
+    get text from list of elements and append it as dict to list if it is bold. 
     """
     text_list_of_dicts = []
     for element in list_of_parent_elements_in_same_group:
         text_dict = get(element)
-        if text_dict.get('text_bold'):
-            text_list_of_dicts.append(text_dict)
+        if not none_or_empty(text_dict):
+            if not none_or_empty(text_dict.get('text')):
+                if text_dict.get('text_bold'):
+                    text_list_of_dicts.append(text_dict)
         text_id = text_dict.get('text_id')
         text_dict = get_connected_bold_text(elements, text_id)
         if not none_or_empty(text_dict):
@@ -193,6 +215,10 @@ def search_in_parents_for_container(elements,parent_id):
             return text_dict
 
 def get_connected_bold_text(elements,text_id):
+    """ 
+    Find text_id in 'source' or 'target' 'tags' and get the bold text of 
+    the opposite cable end and only return if it is not empty. 
+    """
     cable_a = elements.find(".//*[@source='"+text_id+"']")
     cable_b = elements.find(".//*[@target='"+text_id+"']")
     if none_or_empty(cable_a) and not none_or_empty(cable_b):
@@ -332,11 +358,20 @@ def none_or_empty(value):
     if value == None or value =='': return True
     else: return False
 
+def toOutputXmlFile(elements):
+    """ Debug helper. Write elements to file 'output.xml'. """
+    tree = ET.ElementTree(elements)
+    ET.indent(tree, space="  ", level=0)
+    with open('output.xml', 'ab') as f:
+        tree.write(f, encoding='utf-8')
+
 if __name__ == '__main__':
     logging.basicConfig(
         filename='path.log',
-        format='%(levelname)s:%(message)s', 
-        level=logging.INFO
-        #level=logging.DEBUG
+        level=loglevel,
+        format='%(asctime)s '
+        '%(filename)s:%(lineno)s '
+        '[%(funcName)s()]'
+        '%(message)s'        
         )
     scrape()

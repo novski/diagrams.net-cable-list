@@ -111,6 +111,8 @@ def connection_text(elements, connection_id, prefix):
         text_dict.update(get(text_element))
         if not text_dict:
             continue
+        elif none_or_empty(text_dict.get('text')):
+            continue
         elif text_dict.get('text_bold'):
             continue
         elif text_dict.get('text') == 'both empty':
@@ -126,8 +128,8 @@ def connection_text(elements, connection_id, prefix):
             group_id, parent_id = search_in_parents_for_group_id(elements,parent_id)
             group_ids.extend([group_id])
         if not none_or_empty(group_ids):
-            for group_id in group_ids:
-                text_dict.update({'group_id':group_id})
+            for num,group_id in enumerate(group_ids):
+                text_dict.update({'group_id_'+str(num):group_id})
                 list_of_parent_elements_in_same_group = elements.findall(".//*[@parent='"+group_id+"']")
                 group_dict = search_text_in_elements(elements,list_of_parent_elements_in_same_group)
                 parents_text_list.extend(group_dict)
@@ -172,7 +174,8 @@ def search_text_in_elements(elements,list_of_parent_elements_in_same_group):
         text_id = text_dict.get('text_id')
         text_dict = get_connected_bold_text(elements, text_id)
         if not none_or_empty(text_dict):
-            text_list_of_dicts.append(text_dict)
+            if not none_or_empty(text_dict.get('text')):
+                text_list_of_dicts.append(text_dict)
     return text_list_of_dicts
 
 def search_in_parents_for_container(elements,parent_id):

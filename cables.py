@@ -16,13 +16,14 @@ def scrape():
     We iterate over pages.
     """
     logging.info('starting XML parse...')
-    root = ET.parse('test2 copy.xml').getroot()
+    root = ET.parse('test2.xml').getroot()
     list_of_page_elements = root.findall("diagram")
     number_of_cables = 0
     pages = {}
     for page_elements in list_of_page_elements:
         page_name = page_elements.get('name')
-        if set_cable_label_now: pass
+        if set_cable_label_now: 
+            set_new_cable_label(page_elements,)
             # set_cable_label=False
             # cables_list, cable_label_list = cables(page_elements, page_name,set_cable_label)
             # cable_label_list.sort(reverse=True)
@@ -84,21 +85,27 @@ def get_cable_list(page_elements, page_name):
             logging.debug(f'(target_id) == (source_id): skipping inter box connections for design flexibility')
             continue
         cable_dict = {}
-        cable_dict = {'page_name':page_name,
-                    'cable_id':cable_id,
-                    'cable_source_id':cable_source_id,  
-                    'cable_target_id':cable_target_id,   
-                    'cable_parent_id':cable_parent_id}
-        cable_dict.update(cable_dict)
         cable_label_dict = cable_label(page_elements, cable_id)
-        cable_dict.update(cable_label_dict)
+        if not none_or_empty(cable_label_dict):
+            cable_dict.update(cable_label_dict)
+        else: logging.debug(f'cable_label_dict of cable_id:{cable_id} was empty')
         source_dict = get_connection_text(page_elements, cable_source_id,'source')
         if not none_or_empty(source_dict):
             cable_dict.update(source_dict)
+        else: logging.debug(f'source_dict of cable_id:{cable_id} was empty')
         target_dict = get_connection_text(page_elements, cable_target_id,'target')
         if not none_or_empty(target_dict):
             cable_dict.update(target_dict)
-        cable_list.append(cable_dict)
+        else: logging.debug(f'target_dict of cable_id:{cable_id} was empty')
+        print(f'cable_dict:{cable_dict}')
+        if len(cable_dict):
+            cable_dict.update({ 'page_name':page_name,
+                                'cable_id':cable_id,
+                                'cable_source_id':cable_source_id,  
+                                'cable_target_id':cable_target_id,   
+                                'cable_parent_id':cable_parent_id
+                                })
+            cable_list.append(cable_dict)
     logging.debug('device_list:')
     for device in device_list:
         logging.debug(f'(device_list){device}')
@@ -109,6 +116,22 @@ def set_new_cable_label(elements,cable_id):
     for cable in list_of_cable_elements:
         cable_id = get_value_here_or_in_parent(cable,'id')
         label_elements = elements.findall(".//*[@parent='"+str(cable_id)+"']")
+        cable_labels_dict = {}
+        for label_element in label_elements:
+            label_text_list = get_list_of_cable_lables(label_elements).sort(reverse=True)[0]
+            print(f'label_text_list:{label_text_list}')
+            label_text = get_cable_label(label_element)
+            if label_text == 'Source' or label_text == 'Target':
+                pass
+            if int(label_text[0:1]) == 0:
+                pass
+
+def get_list_of_cable_lables(label_elements):
+    label_text_list = []
+    for label_element in label_elements:
+        label_text = get_cable_label(label_element)
+        label_text_list.append(label_text)
+    return label_text_list
 
 def cable_label(elements, cable_id):
     """ 
@@ -118,29 +141,39 @@ def cable_label(elements, cable_id):
     cable_path = ".//*[@parent='"+str(cable_id)+"']"
     label_elements = elements.findall(cable_path)
     cable_labels_dict = {}
-    for counter, label_element in enumerate(label_elements):
-        label_value = label_element.get('value')
-        label_value = cable_label_value_restriction(label_value, label_element, cable_id)
-        label_id = label_element.get('id')
-        label_dict = {'label'+str(counter)+'_value':label_value, 'label'+str(counter)+'_id':label_id}
-        cable_labels_dict.update(label_dict)
+    for counter, element in enumerate(label_elements):
+        label_text = get_cable_label(element)
+        if not none_or_empty(label_text):
+            label_id = element.get('id')
+            label_dict = {'label'+str(counter)+'_value':label_text, 'label'+str(counter)+'_id':label_id}
+            cable_labels_dict.update(label_dict)
     return cable_labels_dict   
 
-def cable_label_value_restriction(label_value, label_element, cable_id):
-    """
-    labels have strange strings and html tags, we filter them and return all sanitized values.
-    """
+def get_cable_label(element):
+    """ get one cable label as return text """
+    label_value = element.get('value')
+    label_label = element.get('label')
+    label_text = a_or_b_if_populated(label_value,label_label)
+    label_text = cable_label_value_restriction(element, label_text)
+    return label_text
+
+def cable_label_value_restriction(element, label_value):
+    """ labels have strange strings and html tags, we filter them and return all sanitized values. """
     if not none_or_empty(label_value):
         if not label_value == '%3CmxGraphModel':
-            label_value = remove_html_tags(label_value).strip()
-            if not detect_special_characer(label_value):
-                return label_value
+            style = get_value_here_or_in_child(element,'style')
+            if not if_bold(style,label_value):
+                label_value = remove_html_tags(label_value).strip()
+                if not detect_special_characer(label_value):
+                    return label_value
+                else:
+                    logging.debug(f'(cable_label_id):{element.get("id")} had special characters: {label_value} and was skipped')
             else:
-                logging.debug(f'[cable_label](cable_id): {cable_id} had special characters: {label_value} and was skipped')
+                logging.debug(f'(cable_label_id):{element.get("id")} had bold text: {label_value} and was skipped')
         else:
-            logging.debug(f'[cable_label](cable_label_id):{label_element.get("id")} had strange diagrams.net string %3CmxGraphModel...')
+            logging.debug(f'(cable_label_id):{element.get("id")} had strange diagrams.net string %3CmxGraphModel...')
     else:
-        logging.debug(f'[cable_label](cable_id): {cable_id} had an empty value')
+        logging.debug(f'(cable_label_id):{element.get("id")} had an empty value')
 
 def get_connection_text(elements, connection_id, prefix):
     """ 
@@ -246,7 +279,7 @@ def get_connected_bold_text(elements,text_id):
     if not none_or_empty(cable):
         cable_id = get_value_here_or_in_parent(cable,'id')
         text_element = elements.find(".//*[@id='"+cable_dir+"']")
-        if not text_element:
+        if text_element is None:
             return None
         text_dict = get(text_element)
         if not none_or_empty(text_dict.get('text')):
@@ -260,17 +293,12 @@ def get(element):
     text_id = get_value_here_or_in_parent(element,'id')
     text_parent_id = get_value_here_or_in_child(element,'parent')
     text = a_or_b_if_populated(element.get('value'), element.get('label'))
-    bold_text_occurrence = find_tag_position(text,'<b>')
-    if not none_or_empty(bold_text_occurrence):
-        if bold_text_occurrence == -1: 
-            bold_text_occurrence = False
-        else: 
-            bold_text_occurrence = True
     style = get_value_here_or_in_child(element,'style')
-    font_style = find_style_tag_value(style,'fontStyle=')
-    if font_style == '1' or bold_text_occurrence is True:
+    bold_text_occurrance = if_bold(style,text)
+    if bold_text_occurrance is True:
         text_bold_dict = {'text_bold':True}
     else: text_bold_dict = {'text_bold':False}
+    style = get_value_here_or_in_child(element,'style')
     container_style = find_style_tag_value(style,'container=')
     if not none_or_empty(container_style):
         if container_style == '1':
@@ -311,9 +339,21 @@ def remove_html_tags(text):
     clean = re.compile('<.*?>')
     return html.unescape(re.sub(clean,' ', text))
 
+def if_bold(style,text):
+    bold_text_occurrance = find_tag_position(text,'<b>')
+    if not none_or_empty(bold_text_occurrance):
+        if bold_text_occurrance == -1: 
+            bold_text_occurrance = False
+        else: 
+            bold_text_occurrance = True
+    font_style = find_style_tag_value(style,'fontStyle=')
+    if font_style == '1' or bold_text_occurrance is True:
+        return True
+    else: False
+
 def find_tag_position(text, tag):
     """
-    Search for tags in a string, return position of occurence.
+    Search for tags in a string, return position of occurrance.
     """
     if not none_or_empty(text):
         text_value = text.find(tag)

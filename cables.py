@@ -16,7 +16,7 @@ def scrape():
     We iterate over pages.
     """
     logging.info('starting XML parse...')
-    root = ET.parse('test2.xml').getroot()
+    root = ET.parse('test.xml').getroot()
     list_of_page_elements = root.findall("diagram")
     number_of_cables = 0
     pages = {}
@@ -184,7 +184,7 @@ def get_connection_text(elements, connection_id, prefix):
     parents_text_list = []
     group_ids =[]
     text_dict = {}
-    text_dict.update(get(text_element))
+    text_dict.update(get_text(text_element))
     if not text_dict: return
     elif none_or_empty(text_dict.get('text')): return
     elif text_dict.get('text_bold'): return
@@ -192,7 +192,7 @@ def get_connection_text(elements, connection_id, prefix):
     text_dict = rename_keys(text_dict,{'text':prefix+'_text'})
     parent_id = text_dict.get('parent_id')
     # get parent element with bold text
-    parent_element = get(elements.find(".//*[@id='"+parent_id+"']"))
+    parent_element = get_text(elements.find(".//*[@id='"+parent_id+"']"))
     if parent_element.get('text_bold'):
         parents_text_list.append(parent_element)
     # get grouped bold texts 
@@ -234,7 +234,7 @@ def search_text_in_elements(elements,list_of_parent_elements_in_same_group):
     """
     text_list_of_dicts = []
     for element in list_of_parent_elements_in_same_group:
-        text_dict = get(element)
+        text_dict = get_text(element)
         if not none_or_empty(text_dict):
             if not none_or_empty(text_dict.get('text')):
                 if text_dict.get('text_bold'):
@@ -254,7 +254,7 @@ def search_in_parents_for_container(elements,parent_id):
     """
     if not none_or_empty(parent_id):
         element = elements.find(".//*[@id='"+parent_id+"']")
-        text_dict = get(element)
+        text_dict = get_text(element)
         if text_dict.get('container') and text_dict.get('connectable'):
             text_id = text_dict.get('text_id')
             text_dict = get_connected_bold_text(elements, text_id)
@@ -281,13 +281,13 @@ def get_connected_bold_text(elements,text_id):
         text_element = elements.find(".//*[@id='"+cable_dir+"']")
         if text_element is None:
             return None
-        text_dict = get(text_element)
+        text_dict = get_text(text_element)
         if not none_or_empty(text_dict.get('text')):
             if text_dict.get('text_bold'):
                 return text_dict
     return None
 
-def get(element):
+def get_text(element):
     """ get all relevant information from a text element as dict. """
     text_dict = {}
     text_id = get_value_here_or_in_parent(element,'id')

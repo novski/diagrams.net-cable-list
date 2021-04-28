@@ -28,7 +28,7 @@ def scrape():
         if set_cable_label_now: 
             last_number = get_last_number(cables_list)
             print(f'last_number:{last_number}')
-            set_new_cable_label(page_elements, list_of_cable_elements, last_number)
+            set_new_cable_label(page_elements, cables_list, last_number)
             cables_list = get_cable_list(page_elements, list_of_cable_elements, page_name)        
         if not cables_list:
             logging.info(f'There are no cables on page {page_name}')
@@ -118,13 +118,13 @@ def get_cable_list(page_elements, list_of_cable_elements, page_name):
         logging.debug(f'(device_list){device}')
     return cable_list
 
-def set_new_cable_label(page_elements, cable_elements, last_number):
+def set_new_cable_label(page_elements, cable_list, last_number):
     cable_label_elements = []
-    number = last_number + 1
-    for cable in cable_elements:
+    number = last_number
+    for cable in cable_list:
         number += 1
         new_number = calculate_cable_number(number)
-        cable_id = get_value_here_or_in_parent(cable,'id')
+        cable_id = cable.get('cable_id')
         cable_label_elements = page_elements.findall(".//*[@parent='"+str(cable_id)+"']")
         for label_element in cable_label_elements:
             label_position = get_label_position(label_element)

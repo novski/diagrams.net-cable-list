@@ -7,8 +7,9 @@ import time
 import json
 
 
-loglevel=logging.INFO
-set_cable_label_now = True
+loglevel = logging.INFO
+
+json_output = True
 
 def scrape():
     """
@@ -18,39 +19,29 @@ def scrape():
     in the default Python xml package.
     """
     logging.info('starting XML parse...')
-    root = ET.parse('test2.xml').getroot()
+    root = ET.parse('210428-LUMA-detail_schematics.xml').getroot()
+    set_cable_label_now = True
     list_of_page_elements = root.findall("diagram")
-    number_of_cables = 0
-    for page_elements in list_of_page_elements:
-        page_name = page_elements.get('name')
-        list_of_cable_elements = get_cable_elements(page_elements)
-        cables_list = get_cable_list(page_elements, list_of_cable_elements, page_name)
-        if set_cable_label_now: 
-            last_number = get_last_number(cables_list)
-            print(f'last_number:{last_number}')
-            set_new_cable_label(page_elements, cables_list, last_number)
-            cables_list = get_cable_list(page_elements, list_of_cable_elements, page_name)        
-        if not cables_list:
-            logging.info(f'There are no cables on page {page_name}')
-            continue
-        cable_list_length = len(cables_list)
-        logging.info(f'page_name: {page_name}')
-        for cable_dict in cables_list: 
-            logging.info(f'(cable_dict):{cable_dict}')
-        number_of_cables += cable_list_length
-        logging.info(f'amount of cables: {cable_list_length}')
-        create_json(cables_list,page_name)
-        # create_csv(cables_list)
-
+    last_number = []
+    print(f'get all cables on all pages...')
+    list_of_cable_elements, cables_list = get_cables_on_pages(list_of_page_elements)
+    last_number_on_page = get_last_number(cables_list)
+    last_number.append(last_number_on_page)
+    last_number.sort(reverse=True)
+    last_number_result = last_number[0]
+    if set_cable_label_now:
+        set_cable_label_now = False
+        print(f'set all cable labels on all pages starting at:{last_number_result}')
+        list_of_cable_elements, cables_list = set_cables_on_pages(list_of_page_elements, cables_list, last_number_result)
     tree = ET.ElementTree(root)
-    tree.write('output1.xml', pretty_print=True, xml_declaration=True, encoding="utf-8")
-    logging.info(f'total amount of cables: {number_of_cables}')
+    tree.write('output.drawio', pretty_print=True, xml_declaration=True, encoding="utf-8")
+    # TODO Replace: logging.info(f'total amount of cables: {number_of_cables}')
     logging.info('Finished')
 
 def create_json(cables_list,page_name):
     pages = {}
     pages[page_name] = cables_list
-    with open("cables.json", "w") as f:
+    with open('cables.json', 'a') as f:
         f.write(json.dumps(pages, indent=2))
 
 def create_csv(cables_list):
@@ -59,7 +50,53 @@ def create_csv(cables_list):
         for key in cable_dict:
             if key.find('_parents') != -1:
                 for d in cable_dict:
-                    print(f'found _parents in cable_id: {cable_dict.get("cable_id")} d:{d}')
+                    pass#print(f'found _parents in cable_id: {cable_dict.get("cable_id")} d:{d}')
+
+def deleteContent(fName):
+    with open('cables.json', "w"):
+        pass
+
+def get_cables_on_pages(list_of_page_elements):
+    number_of_cables = 0
+    deleteContent('cables.json')
+    deleteContent('cables.log')
+    for page_elements in list_of_page_elements:
+        page_name = page_elements.get('name')
+        list_of_cable_elements = get_cable_elements(page_elements)
+        cables_list = get_cable_list(page_elements, list_of_cable_elements, page_name)
+        if not cables_list:
+            logging.info(f'There are no cables on page {page_name}')
+            continue
+        logging.info(f'page_name: {page_name}')
+        for cable_dict in cables_list: 
+            logging.info(f'(cable_dict):{cable_dict}')
+        number_of_cables += len(cables_list)
+        logging.info(f'amount of cables: {len(cables_list)}')
+        if json_output:
+            create_json(cables_list,page_name)
+    return list_of_cable_elements, cables_list
+
+def set_cables_on_pages(list_of_page_elements, cables_list, last_number):
+    number_of_cables = 0
+    new_number = last_number + 1
+    for page_elements in list_of_page_elements:
+        page_name = page_elements.get('name')
+        list_of_cable_elements = get_cable_elements(page_elements)
+        cables_list = get_cable_list(page_elements, list_of_cable_elements, page_name)
+        if not cables_list:
+            logging.info(f'There are no cables on page {page_name}')
+            continue
+        new_number = set_new_cable_label(page_elements, cables_list, new_number)
+        cables_list = get_cable_list(page_elements, list_of_cable_elements, page_name)
+        if not cables_list:
+            logging.info(f'There are no cables on page {page_name}')
+            continue
+        logging.info(f'page_name: {page_name}')
+        for cable_dict in cables_list: 
+            logging.info(f'(cable_dict):{cable_dict}')
+        number_of_cables += len(cables_list)
+        logging.info(f'amount of cables: {len(cables_list)}')
+    return list_of_cable_elements, cables_list
 
 def get_cable_elements(page_elements):
     """
@@ -118,53 +155,37 @@ def get_cable_list(page_elements, list_of_cable_elements, page_name):
         logging.debug(f'(device_list){device}')
     return cable_list
 
-def set_new_cable_label(page_elements, cable_list, last_number):
+def set_new_cable_label(page_elements, cable_list, new_number):
+    """
+    for each cable we check for the labels that are in position x:-1 (source) or x:1 (target).
+    if the label is not already the size of 
+    """
     cable_label_elements = []
-    number = last_number
     for cable in cable_list:
-        number += 1
-        new_number = calculate_cable_number(number)
+        flag_new_label_found = 0
         cable_id = cable.get('cable_id')
         cable_label_elements = page_elements.findall(".//*[@parent='"+str(cable_id)+"']")
         for label_element in cable_label_elements:
             label_position = get_label_position(label_element)
             if not none_or_empty(label_position):
                 if label_position == 'source' or label_position == 'target':
-                    print(f'label_element_id:{get_value_here_or_in_parent(label_element,"value","label")}')
-                    set_here_or_in_parent(label_element, new_number, 'value', 'label')
+                    label_text = get_value_here_or_in_parent(label_element,"value","label")
+                    if not label_text.isdigit() and str(label_text[0:1]) != '0':
+                        flag_new_label_found = 1
+                        new_number_string = calculate_cable_number(new_number)
+                        set_here_or_in_parent(label_element, new_number_string, 'value', 'label')
+                        print(f'new label found on cable_id:{cable_id}, labeled with:{new_number_string}')
+        if flag_new_label_found:
+            new_number = new_number + 1
+    return new_number
 
 def calculate_cable_number(number):
-    """ fixed to my default range of cables: 00001-10000 """
+    """ fixed to my default range of cables: 00001-09999 """
     number_string = str(number)
     total_length = 5
     pading_zeros = total_length - len(number_string)
     return number_string.rjust(pading_zeros + len(number_string), '0')
      
-
-def set_here_or_in_parent(element, value, here_tag, parent_tag='no'):
-    """ 
-    get(tag), if 'None' get parent element and set to new value. 
-    in any case check the set value and return it value. 
-    """
-    print(f'parent_id:{get_value_here_or_in_parent(element,"id")}, here_tag:{here_tag}, parent_tag:{parent_tag}, value:{value}')
-    here_value = element.get(here_tag)
-    if here_value is None:
-        parent = element.getparent()
-        print(f'parent:{parent}, label:{parent.get("label")}')
-        toOutputXmlFile(parent)
-        if parent is None:
-            value = None
-            logging.debug(f'[!] whether here nor parent tag was present!')
-        else:
-            print(f'parent_tag:{parent_tag}, value:{value}')
-            parent.set(parent_tag,value)
-            value = parent.get(parent_tag)
-    else: 
-        element.set(here_tag,value)
-        value = element.get(here_tag)
-    return value
-
-
 def get_cable_labels(elements, cable_id):
     """ 
     labels have same parent_id as cable_id. Search for all attributes 'parent' 
@@ -186,9 +207,7 @@ def get_cable_labels(elements, cable_id):
 
 def get_cable_label(element):
     """ get one cable label as return text """
-    label_value = get_value_here_or_in_parent(element,'value')
-    label_label = get_value_here_or_in_parent(element,'label')
-    label_text = a_or_b_if_populated(label_value,label_label)
+    label_text = get_value_here_or_in_parent(element,'value', 'label')
     label_text = cable_label_value_restriction(element, label_text)
     return label_text
 
@@ -463,6 +482,25 @@ def get_value_here_or_in_child(element,tag):
         value = value.get(tag)
     return value
 
+def set_here_or_in_parent(element, value, here_tag, parent_tag='no'):
+    """ 
+    get(tag), if 'None' get parent element and set to new value. 
+    in any case check the set value and return it value. 
+    """
+    here_value = element.get(here_tag)
+    if here_value is None:
+        parent = element.getparent()
+        if parent is None:
+            value = None
+            logging.debug(f'[!] whether here nor parent tag was present!')
+        else:
+            parent.set(parent_tag,value)
+            value = parent.get(parent_tag)
+    else: 
+        element.set(here_tag,value)
+        value = element.get(here_tag)
+    return value
+
 def rename_keys(input_dict, key_to_replace_dict):
     """
     Gets a dict, and another dict specifying how to rename keys as {'old_keyname':'new_keyname'}.
@@ -485,7 +523,7 @@ def toOutputXmlFile(elements):
 
 if __name__ == '__main__':
     logging.basicConfig(
-        filename='path.log',
+        filename='cables.log',
         level=loglevel,
         format='%(asctime)s '
         '%(filename)s:%(lineno)s '

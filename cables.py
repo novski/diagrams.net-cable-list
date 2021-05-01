@@ -25,14 +25,11 @@ def scrape():
     last_number = []
     print(f'get all cables on all pages...')
     list_of_cable_elements, cables_list = get_cables_on_pages(list_of_page_elements)
-    last_number_on_page = get_last_number(cables_list)
-    last_number.append(last_number_on_page)
-    last_number.sort(reverse=True)
-    last_number_result = last_number[0]
+    last_number = get_last_number(cables_list)
     if set_cable_label_now:
         set_cable_label_now = False
-        print(f'set all cable labels on all pages starting at:{last_number_result}')
-        list_of_cable_elements, cables_list = set_cables_on_pages(list_of_page_elements, cables_list, last_number_result)
+        print(f'set all cable labels on all pages starting at:{last_number}')
+        list_of_cable_elements, cables_list = set_cables_on_pages(list_of_page_elements, cables_list, last_number)
     tree = ET.ElementTree(root)
     tree.write('output.drawio', pretty_print=True, xml_declaration=True, encoding="utf-8")
     # TODO Replace: logging.info(f'total amount of cables: {number_of_cables}')

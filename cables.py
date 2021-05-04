@@ -8,7 +8,7 @@ import json
 
 
 loglevel = logging.INFO
-
+clean = re.compile('<.*?>')
 json_output = True
 
 def scrape():
@@ -64,11 +64,8 @@ def get_cables_on_pages(list_of_page_elements):
         if not cables_list:
             logging.info(f'There are no cables on page {page_name}')
             continue
-        logging.info(f'page_name: {page_name}')
-        for cable_dict in cables_list: 
-            logging.info(f'(cable_dict):{cable_dict}')
+        logging.info(f'found {len(cables_list)} cables on page {page_name}')
         number_of_cables += len(cables_list)
-        logging.info(f'amount of cables: {len(cables_list)}')
         if json_output:
             create_json(cables_list,page_name)
     return list_of_cable_elements, cables_list
@@ -88,11 +85,8 @@ def set_cables_on_pages(list_of_page_elements, cables_list, last_number):
         if not cables_list:
             logging.info(f'There are no cables on page {page_name}')
             continue
-        logging.info(f'page_name: {page_name}')
-        for cable_dict in cables_list: 
-            logging.info(f'(cable_dict):{cable_dict}')
+        logging.info(f'annotated {len(cables_list)} cables on {page_name}')
         number_of_cables += len(cables_list)
-        logging.info(f'amount of cables: {len(cables_list)}')
     return list_of_cable_elements, cables_list
 
 def get_cable_elements(page_elements):
@@ -171,7 +165,7 @@ def set_new_cable_label(page_elements, cable_list, new_number):
                         flag_new_label_found = 1
                         new_number_string = calculate_cable_number(new_number)
                         set_here_or_in_parent(label_element, new_number_string, 'value', 'label')
-                        print(f'new label found on cable_id:{cable_id}, labeled with:{new_number_string}')
+                        logging.debug(f'new label found on cable_id:{cable_id}, labeled with:{new_number_string}')
         if flag_new_label_found:
             new_number = new_number + 1
     return new_number
@@ -411,7 +405,6 @@ def remove_html_tags(text):
     Remove html tags from a string by regex. Filter all charref characters 
     with package html. Both with python3.4+ built in tools.
     """
-    clean = re.compile('<.*?>')
     return html.unescape(re.sub(clean,' ', text))
 
 def if_bold(style,text):
@@ -439,12 +432,9 @@ def find_style_tag_value(text,tag):
     """
     Search tags from in a string, return variables behind '='.
     """
-    if not none_or_empty(text):
-        array =text.split(';')
-        for x in array:
-            if x.find(tag) != -1:
-                parts = x.partition('=')
-                return parts[2]
+    match = re.search(f"{tag}(.+?);",text)
+    match = match.groups(1) if match else -1
+    return match
 
 def detect_special_characer(pass_string):
     """

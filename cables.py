@@ -8,7 +8,7 @@ import json
 
 
 loglevel = logging.INFO
-
+clean = re.compile('<.*?>')
 json_output = True
 
 def scrape():
@@ -64,11 +64,8 @@ def get_cables_on_pages(list_of_page_elements):
         if not cables_list:
             logging.info(f'There are no cables on page {page_name}')
             continue
-        logging.info(f'page_name: {page_name}')
-        for cable_dict in cables_list: 
-            logging.info(f'(cable_dict):{cable_dict}')
+        logging.info(f'found {len(cables_list)} cables on page {page_name}')
         number_of_cables += len(cables_list)
-        logging.info(f'amount of cables: {len(cables_list)}')
         if json_output:
             create_json(cables_list,page_name)
     return list_of_cable_elements, cables_list
@@ -76,6 +73,7 @@ def get_cables_on_pages(list_of_page_elements):
 def set_cables_on_pages(list_of_page_elements, cables_list, last_number):
     number_of_cables = 0
     new_number = last_number + 1
+
     for page_elements in list_of_page_elements:
         page_name = page_elements.get('name')
         list_of_cable_elements = get_cable_elements(page_elements)
@@ -83,16 +81,14 @@ def set_cables_on_pages(list_of_page_elements, cables_list, last_number):
         if not cables_list:
             logging.info(f'There are no cables on page {page_name}')
             continue
+
         new_number = set_new_cable_label(page_elements, cables_list, new_number)
-        cables_list = get_cable_list(page_elements, list_of_cable_elements, page_name)
-        if not cables_list:
-            logging.info(f'There are no cables on page {page_name}')
-            continue
-        logging.info(f'page_name: {page_name}')
-        for cable_dict in cables_list: 
-            logging.info(f'(cable_dict):{cable_dict}')
         number_of_cables += len(cables_list)
-        logging.info(f'amount of cables: {len(cables_list)}')
+
+        cable_ids = [cable.get("annotation") for cable in cables_list if cable.get("annotation")]
+        result_str = f'annotated {len(cables_list)} cables on "{page_name}" starting with cable id "{cable_ids[0]}"'
+        logging.info(result_str)
+
     return list_of_cable_elements, cables_list
 
 def get_cable_elements(page_elements):
@@ -124,21 +120,21 @@ def get_cable_list(page_elements, list_of_cable_elements, page_name):
         cable_target_id = get_value_here_or_in_child(cable,'target')
         cable_parent_id = get_value_here_or_in_child(cable,'parent')
         if cable_source_id == cable_target_id:
-            logging.debug(f'(target_id) == (source_id): skipping inter box connections for design flexibility')
+            logging.debug(f'"{cable_id}" is inter box, skipped')
             continue
         cable_dict = {}
         cable_label_dict = get_cable_labels(page_elements, cable_id)
         if not none_or_empty(cable_label_dict):
             cable_dict.update(cable_label_dict)
-        else: logging.debug(f'cable_label_dict of cable_id:{cable_id} was empty')
+        else: logging.debug(f'cable_label_dict of "{cable_id}" was empty, skipped')
         source_dict = get_connection_text(page_elements, cable_source_id,'source')
         if not none_or_empty(source_dict):
             cable_dict.update(source_dict)
-        else: logging.debug(f'source_dict of cable_id:{cable_id} was empty')
+        else: logging.debug(f'source_dict of "{cable_id}" was empty, skipped')
         target_dict = get_connection_text(page_elements, cable_target_id,'target')
         if not none_or_empty(target_dict):
             cable_dict.update(target_dict)
-        else: logging.debug(f'target_dict of cable_id:{cable_id} was empty')
+        else: logging.debug(f'target_dict of "{cable_id}" was empty, skipped')
         if len(cable_dict):
             cable_dict.update({ 'page_name':page_name,
                                 'cable_id':cable_id,
@@ -147,9 +143,9 @@ def get_cable_list(page_elements, list_of_cable_elements, page_name):
                                 'cable_parent_id':cable_parent_id
                                 })
             cable_list.append(cable_dict)
-    logging.debug('device_list: !!!TODO!!!')
-    for device in device_list:
-        logging.debug(f'(device_list){device}')
+    # logging.debug('device_list: !!!TODO!!!')
+    # for device in device_list:
+        # logging.debug(f'(device_list){device}')
     return cable_list
 
 def set_new_cable_label(page_elements, cable_list, new_number):
@@ -158,8 +154,9 @@ def set_new_cable_label(page_elements, cable_list, new_number):
     if the label is not already the size of 
     """
     cable_label_elements = []
-    for cable in cable_list:
+    for cable_index in range(len(cable_list)):
         flag_new_label_found = 0
+        cable = cable_list[cable_index]
         cable_id = cable.get('cable_id')
         cable_label_elements = page_elements.findall(".//*[@parent='"+str(cable_id)+"']")
         for label_element in cable_label_elements:
@@ -171,7 +168,8 @@ def set_new_cable_label(page_elements, cable_list, new_number):
                         flag_new_label_found = 1
                         new_number_string = calculate_cable_number(new_number)
                         set_here_or_in_parent(label_element, new_number_string, 'value', 'label')
-                        print(f'new label found on cable_id:{cable_id}, labeled with:{new_number_string}')
+                        cable_list[cable_index]["annotation"] = new_number_string
+                        logging.debug(f'"{cable_id}" labeled with "{new_number_string}"')
         if flag_new_label_found:
             new_number = new_number + 1
     return new_number
@@ -228,13 +226,13 @@ def cable_label_value_restriction(element, label_value):
                 if not detect_special_characer(label_value):
                     return label_value
                 else:
-                    logging.debug(f'(cable_label_id):{element.get("id")} had special characters: {label_value} and was skipped')
+                    logging.debug(f'"{element.get("id")}" had special characters: {label_value[:30]}, skipped')
             else:
-                logging.debug(f'(cable_label_id):{element.get("id")} had bold text: {label_value} and was skipped')
+                logging.debug(f'"{element.get("id")}" had bold text: {label_value}, skipped')
         else:
-            logging.debug(f'(cable_label_id):{element.get("id")} had strange diagrams.net string %3CmxGraphModel...')
+            logging.debug(f'"{element.get("id")}" had string %3CmxGraphModel..., skipped')
     else:
-        logging.debug(f'(cable_label_id):{element.get("id")} had an empty value')
+        logging.debug(f'"{element.get("id")}" had an empty value, skipped')
 
 def get_last_number(cables_list):
     label_numbers = [0]
@@ -285,7 +283,6 @@ def get_connection_text(elements, connection_id, prefix):
     if not none_or_empty(parents_container_text_dict):
         parents_text_list.append(parents_container_text_dict)
     text_dict.update({prefix+'_parents':parents_text_list})
-    logging.debug(f'(texts_dict):{text_dict}')
     return text_dict
 
 def search_in_parents_for_group_id(elements,parent_id):
@@ -411,7 +408,6 @@ def remove_html_tags(text):
     Remove html tags from a string by regex. Filter all charref characters 
     with package html. Both with python3.4+ built in tools.
     """
-    clean = re.compile('<.*?>')
     return html.unescape(re.sub(clean,' ', text))
 
 def if_bold(style,text):
@@ -439,12 +435,9 @@ def find_style_tag_value(text,tag):
     """
     Search tags from in a string, return variables behind '='.
     """
-    if not none_or_empty(text):
-        array =text.split(';')
-        for x in array:
-            if x.find(tag) != -1:
-                parts = x.partition('=')
-                return parts[2]
+    match = re.search(f"{tag}(.+?);",text)
+    match = match.groups(1) if match else -1
+    return match
 
 def detect_special_characer(pass_string):
     """
@@ -524,8 +517,9 @@ if __name__ == '__main__':
         level=loglevel,
         format='%(asctime)s '
         '%(filename)s:%(lineno)s '
-        '[%(funcName)s()]'
+        '[%(funcName)s()] '
         '%(message)s',
         #stream=sys.stdout   
         )
+    logging.getLogger().addHandler(logging.StreamHandler())
     scrape()

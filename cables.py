@@ -5,21 +5,38 @@ import html
 import re
 import time
 import json
+import argparse
 
 
-loglevel = logging.INFO
+parser = argparse.ArgumentParser()
+parser.add_argument('filepath', 
+                    type=str, 
+                    help='add filepath')
+parser.add_argument('-o', 
+                    dest='outputname', 
+                    type=str, 
+                    help='output filename')
+parser.add_argument('-l', 
+                    dest='loglevel', 
+                    type=str, 
+                    help='define the loglevel', 
+                    nargs='?', 
+                    const='logging.INFO', 
+                    default='logging.INFO')
+args = parser.parse_args()
 
 json_output = True
 
-def scrape():
+def scrape(filepath, output):
     """
     Every page in diagrams.net has its own <root> element. 
     We iterate over pages.
     Non Python default package "lxml" is needed because of the missing `.get_parent()` function
     in the default Python xml package.
     """
+    print(f'filepath:{filepath}')
     logging.info('starting XML parse...')
-    root = ET.parse('210428-LUMA-detail_schematics.xml').getroot()
+    root = ET.parse(filepath).getroot()
     set_cable_label_now = True
     list_of_page_elements = root.findall("diagram")
     last_number = []
@@ -31,7 +48,7 @@ def scrape():
         print(f'set all cable labels on all pages starting at:{last_number}')
         list_of_cable_elements, cables_list = set_cables_on_pages(list_of_page_elements, cables_list, last_number)
     tree = ET.ElementTree(root)
-    tree.write('output.drawio', pretty_print=True, xml_declaration=True, encoding="utf-8")
+    tree.write(output, pretty_print=True, xml_declaration=True, encoding="utf-8")
     # TODO Replace: logging.info(f'total amount of cables: {number_of_cables}')
     logging.info('Finished')
 
@@ -83,7 +100,7 @@ def set_cables_on_pages(list_of_page_elements, cables_list, last_number):
         if not cables_list:
             logging.info(f'There are no cables on page {page_name}')
             continue
-        new_number = set_new_cable_label(page_elements, cables_list, new_number)
+        new_number = set_new_cable_label(page_elements, cables_list, new_number, page_name)
         cables_list = get_cable_list(page_elements, list_of_cable_elements, page_name)
         if not cables_list:
             logging.info(f'There are no cables on page {page_name}')
@@ -152,10 +169,10 @@ def get_cable_list(page_elements, list_of_cable_elements, page_name):
         logging.debug(f'(device_list){device}')
     return cable_list
 
-def set_new_cable_label(page_elements, cable_list, new_number):
+def set_new_cable_label(page_elements, cable_list, new_number, page_name):
     """
     for each cable we check for the labels that are in position x:-1 (source) or x:1 (target).
-    if the label is not already the size of 
+    if the label is not digit or starts with 0, we relable it on both sides with the new Number.
     """
     cable_label_elements = []
     for cable in cable_list:
@@ -171,7 +188,7 @@ def set_new_cable_label(page_elements, cable_list, new_number):
                         flag_new_label_found = 1
                         new_number_string = calculate_cable_number(new_number)
                         set_here_or_in_parent(label_element, new_number_string, 'value', 'label')
-                        print(f'new label found on cable_id:{cable_id}, labeled with:{new_number_string}')
+                        print(f'new label found on cable_id:{cable_id}, labeled with:{new_number_string} on page:{page_name}')
         if flag_new_label_found:
             new_number = new_number + 1
     return new_number
@@ -439,12 +456,12 @@ def find_style_tag_value(text,tag):
     """
     Search tags from in a string, return variables behind '='.
     """
-    if not none_or_empty(text):
-        array =text.split(';')
-        for x in array:
-            if x.find(tag) != -1:
-                parts = x.partition('=')
-                return parts[2]
+
+    match = re.search(f"{tag}(.+?);",text)
+    match = match.groups(1) if match else -1
+    return match
+
+    
 
 def detect_special_characer(pass_string):
     """
@@ -519,13 +536,27 @@ def toOutputXmlFile(elements):
 
 
 if __name__ == '__main__':
+    t = time.perf_counter()
     logging.basicConfig(
         filename='cables.log',
-        level=loglevel,
+        level=logging.INFO,
         format='%(asctime)s '
         '%(filename)s:%(lineno)s '
         '[%(funcName)s()]'
         '%(message)s',
         #stream=sys.stdout   
         )
-    scrape()
+    # if the argparse -o value is set use that filename as output else add output to the filename
+    # in both cases use the path and save the file where it comes from.
+    path_index = args.filepath.rfind('/')
+    if args.outputname:
+        name = args.outputname
+    else:
+        full_filename = args.filepath[path_index+1:]
+        extension_index = full_filename.rfind('.')
+        filename = full_filename[:extension_index]
+        name = filename + '-output.drawio'
+    path = args.filepath[:path_index+1]
+    output_path = path + name
+    scrape(args.filepath, output_path)
+    print(f'created file: {output_path} in {time.perf_counter()-t}sec.')

@@ -6,8 +6,8 @@ Find all Cables in an diagrams.net (former draw.io) drawing and create a cable l
 
 ## How to use:
 1. Define output as debuglevel in __main__.
-2. Define your not compressed exported diagrams.net file as path in scrape().
-3. start as script with `python3 cable.py`.
+2. Define your not compressed exported diagrams.net file with path.
+3. start as script with `python3 cable.py {yourpath}`.
 
 ## How it works:
 Iterateing over each page it scrapes all nodes in the xml that have the tag 'source' 
@@ -27,4 +27,3 @@ Debug in stdout with  ET.dump(elements) or to a file with toOutputXmlFile(elemen
 ## TODO:
 - [] Add CSV export
 - [] Add loglevel as CLI input
-- [] think about possibilities of interactive path/file and options  

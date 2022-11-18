@@ -23,7 +23,7 @@ def set_new_cable_label(page_elements, cable_list, new_number, page_name):
                         flag_new_label_found = 1
                         new_number_string = create_cable_label(new_number)
                         helpers.set_here_or_in_parent(label_element, new_number_string, 'value', 'label')
-                        logger.debug(f'new label found on cable_id:{cable_id}, labeled with:{new_number_string} on page:{page_name}')
+                        logger.debug(f'page_name:{page_name} - new label found on cable_id:{cable_id}, labeled with:{new_number_string}')
         if flag_new_label_found:
             new_number = new_number + 1
     return new_number

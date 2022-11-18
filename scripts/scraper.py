@@ -12,22 +12,22 @@ def scrape(args):
     Non Python default package "lxml" is needed because of the missing `.get_parent()` function
     in the default Python xml package.
     """
+
     logger.info(f'filepath:{args.filepath}')
     logger.info('starting XML parse...')
     root = ET.parse(args.filepath).getroot()
     list_of_page_elements = root.findall("diagram")
     # start of parseing
     logger.info(f'get all cables on all pages...')
-    last_number = []
-    list_of_cable_elements, cables_list = cables.get_cables_on_pages(list_of_page_elements)
-    last_number = cables.get_last_number(cables_list)
+    cables_list = cables.get_cables_on_pages(list_of_page_elements)
     # start of Re-Labeling
-    set_cable_label_now = eval(args.renumber)
-    if set_cable_label_now:
-        set_cable_label_now = False
+    renumber = args.renumber
+    if eval(renumber):
+        renumber = False
+        last_number = cables.get_last_number(cables_list)
         logger.info(f'set all cable labels on all pages starting with last number:{last_number}')
-        list_of_cable_elements, cables_list = cables.set_cables_on_pages(list_of_page_elements, cables_list, last_number)
+        cables_list = cables.set_cables_on_pages(list_of_page_elements, cables_list, last_number)
     # start of export
-    outputs = export.export(args, root, cables_list, list_of_cable_elements, list_of_page_elements)
-    # TODO Replace: logger.info(f'total amount of cables: {number_of_cables}')
+    outputs = export.export(args, root, cables_list, list_of_page_elements)
+    logger.info(f'total amount of cables: {len(cables_list)}')
     return outputs

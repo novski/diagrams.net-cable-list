@@ -14,7 +14,7 @@ def setup_custom_logger(args, name):
         return logger
         #logger.handlers.clear()
     logger.propagate = False
-    level = logging.getLevelName(args.logglevel)    
+    level = logging.getLevelName( args.logglevel.upper())    
     logger.setLevel(level)
 
     # checking if the directory for logging exist or not.
@@ -22,6 +22,7 @@ def setup_custom_logger(args, name):
         os.makedirs(args.loggpath)
     
     logfile = Path(args.loggpath + args.filepath[(args.filepath.rfind('/'))+1:] +'.log')
+    
     if os.path.exists(logfile):
         os.remove(logfile)
 
@@ -34,12 +35,12 @@ def setup_custom_logger(args, name):
     stream_handler.setLevel(logging.DEBUG)
     stream_handler.setFormatter(formatter)
 
-    # timerotating_handler = logging.handlers.TimedRotatingFileHandler(logfile, when='D', backupCount=30)
-    # timerotating_handler.setLevel(level)
-    # timerotating_handler.setFormatter(formatter)    
+    timerotating_handler = logging.handlers.TimedRotatingFileHandler(logfile, when='D', backupCount=30)
+    timerotating_handler.setLevel(level)
+    timerotating_handler.setFormatter(formatter)    
     
-    # listener = logging.handlers.QueueListener(log_queue, stream_handler, timerotating_handler, respect_handler_level=True)
+    listener = logging.handlers.QueueListener(log_queue, stream_handler, timerotating_handler, respect_handler_level=True)
         
-    # listener.start()
+    listener.start()
 
     return logger

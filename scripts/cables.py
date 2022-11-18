@@ -8,63 +8,50 @@ logger = logging.getLogger('scraper')
 
 def get_cables_on_pages(list_of_page_elements):
     number_of_cables = 0
+    cables_list = []
     for page_elements in list_of_page_elements:
         page_name = page_elements.get('name')
-        list_of_cable_elements = get_cable_elements(page_elements)
-        cables_list = get_cable_list(page_elements, list_of_cable_elements, page_name)
-        if not cables_list:
-            logger.info(f'There are no cables on page {page_name}')
+        cables_on_pages_list = get_cable_list(page_elements, page_name)
+        if not cables_on_pages_list:
+            logger.info(f'page_name:{page_name} - There are no cables on this page')
             continue
-        logger.info(f'page_name: {page_name}')
-        for cable_dict in cables_list: 
-            logger.debug(f'(cable_dict):{cable_dict}')
-        number_of_cables += len(cables_list)
-        logger.info(f'amount of cables: {len(cables_list)}')
-    return list_of_cable_elements, cables_list
+        if logger.level == 10: # 10 is the level of DEBUG
+            for cable_dict in cables_on_pages_list: 
+                logger.debug(f'(cable_dict):{cable_dict}')
+        logger.info(f'page_name:{page_name} - amount of cables: {len(cables_on_pages_list)}')
+        cables_list += cables_on_pages_list
+    return cables_list
 
 def set_cables_on_pages(list_of_page_elements, cables_list, last_number):
+    # TODO! why do we do that two times here?
     number_of_cables = 0
     new_number = last_number + 1
     for page_elements in list_of_page_elements:
         page_name = page_elements.get('name')
-        list_of_cable_elements = get_cable_elements(page_elements)
-        cables_list = get_cable_list(page_elements, list_of_cable_elements, page_name)
+        cables_list = get_cable_list(page_elements, page_name)
         if not cables_list:
-            logger.info(f'There are no cables on page {page_name}')
+            logger.info(f'page_name:{page_name} - There are no cables on this page')
             continue
         new_number = labels.set_new_cable_label(page_elements, cables_list, new_number, page_name)
-        cables_list = get_cable_list(page_elements, list_of_cable_elements, page_name)
+        cables_list = get_cable_list(page_elements, page_name)
         if not cables_list:
-            logger.info(f'There are no cables on page {page_name}')
+            logger.info(f'page_name:{page_name} - There are still no cables on this page')
             continue
-        logger.info(f'page_name: {page_name}')
-        for cable_dict in cables_list: 
-            logger.debug(f'(cable_dict):{cable_dict}')
-        number_of_cables += len(cables_list)
-        logger.info(f'amount of cables: {len(cables_list)}')
-    return list_of_cable_elements, cables_list
+        if logger.level == 10: # 10 is the level of DEBUG
+            for cable_dict in cables_list: 
+                logger.debug(f'(cable_dict):{cable_dict}')
+        logger.info(f'page_name:{page_name} - amount of cables: {len(cables_list)}')
+    return cables_list
 
-def get_cable_elements(page_elements):
-    """
-    Search for all source and target tags. 
-    This leads to incomplete elements where the id is cut off. To reach the id of 
-    the seldom <object> elements we have to get the parent of <mxCell>.
-    """
-    list_of_cable_elements = []
-    list_of_cables_incomplete = page_elements.findall( ".//*[@source][@target]")
-    for mxCell in list_of_cables_incomplete:
-        mxCell_id = helpers.get_value_here_or_in_parent(mxCell,'id')
-        if not helpers.none_or_empty(mxCell_id):
-            list_of_cable_elements += page_elements.findall('.//*[@id="'+mxCell_id+'"]')
-    return list_of_cable_elements
-
-def get_cable_list(page_elements, list_of_cable_elements, page_name):
+def get_cable_list(page_elements, page_name):
     """ 
-    iterate through the 'list_of_cable_elements' and search for cable_labels and connected_text elements.
+    iterate through the 'list_of_cable_elements' and search for cable_labels 
+    (on the hole page) and connected_text elements.
     Return a list of cable information to build exports.
     """
     cable_list = []
     device_list = []
+    list_of_cable_elements = get_cable_elements(page_elements)
     if not list_of_cable_elements:
         return None
     for cable in list_of_cable_elements:
@@ -97,9 +84,24 @@ def get_cable_list(page_elements, list_of_cable_elements, page_name):
                                 })
             cable_list.append(cable_dict)
     logger.debug('device_list: !!!TODO!!!')
-    for device in device_list:
-        logger.debug(f'(device_list){device}')
+    if logger.level == 10: # 10 is the level of DEBUG    
+        for device in device_list:
+            logger.debug(f'(device_list){device}')
     return cable_list
+
+def get_cable_elements(page_elements):
+    """
+    Search for all source and target tags. 
+    This leads to incomplete elements where the id is cut off. To reach the id of 
+    the seldom <object> elements we have to get the parent of <mxCell>.
+    """
+    list_of_cable_elements = []
+    list_of_cables_incomplete = page_elements.findall( ".//*[@source][@target]")
+    for mxCell in list_of_cables_incomplete:
+        mxCell_id = helpers.get_value_here_or_in_parent(mxCell,'id')
+        if not helpers.none_or_empty(mxCell_id):
+            list_of_cable_elements += page_elements.findall('.//*[@id="'+mxCell_id+'"]')
+    return list_of_cable_elements
 
 def get_last_number(cables_list):
     label_numbers = [0]

@@ -6,7 +6,7 @@ import json
 
 logger = logging.getLogger('scraper')
 
-def export(args, root, cables_list, list_of_cable_elements, list_of_page_elements):
+def export(args, root, cables_list, list_of_page_elements):
 
     # if the argparse -o value is set use that filename as output else add output to the filename
     # in both cases use the path and save the file where it comes from.

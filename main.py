@@ -22,8 +22,8 @@ parser.add_argument('-c',
                     dest='cablesheet', 
                     type=str, 
                     help="define if cablesheet should be saved. \
-                         There are two choices: 'json' or 'csv'. \
-                         Default is csv.", 
+                          There are two choices: 'json' or 'csv'. \
+                          Default is csv.", 
                     nargs='?', 
                     const='csv', 
                     default='False')
@@ -31,7 +31,7 @@ parser.add_argument('-nr',
                     dest='renumber', 
                     type=str, 
                     help="define if the cable numbers should be . \
-                         renumbered as True or False. Default is True",
+                          renumbered as True or False. Default is True",
                     nargs='?', 
                     const='False', 
                     default='False')
@@ -46,7 +46,7 @@ parser.add_argument('-loggpath',
                     dest='loggpath', 
                     type=str, 
                     help="define if the path where the log should \
-                         be stored. Default is ./log/",
+                          be stored. Default is ./log/",
                     nargs='?', 
                     const='./', 
                     default='./log/')
@@ -54,15 +54,14 @@ args = parser.parse_args()
 
 def main(args):
      # CAUTION: only the main file should create this custom loger. 
-     # The others should retrieve it. logging.getLogger('app')
+     # The others should retrieve it. logging.getLogger('name')
      logger = globallogger.setup_custom_logger(args, 'scraper')
-     print('start')
      logger.info(f'starting..')
+     t = time.perf_counter()
      outputs = scrape(args)
+     logger.info(f'created files: {outputs} in {time.perf_counter()-t}sec.')
      return outputs
 
 if __name__ == '__main__':
-    t = time.perf_counter()
-    logger = logging.getLogger('scraper')
-    outputs = main(args)
-    logger.info(f'created files: {outputs} in {time.perf_counter()-t}sec.')
+     main(args)
+     

@@ -22,15 +22,14 @@ parser.add_argument('-c',
                     dest='cablesheet', 
                     type=str, 
                     help="define if cablesheet should be saved. \
-                          There are two choices: 'json' or 'csv'. \
-                          Default is csv.", 
+                          There are two choices: 'json' or 'csv'.", 
                     nargs='?', 
                     const='csv', 
                     default='False')
 parser.add_argument('-nr', 
                     dest='renumber', 
                     type=str, 
-                    help="define if the cable numbers should be . \
+                    help="define if the cable numbers should be \
                           renumbered as True or False. Default is True",
                     nargs='?', 
                     const='False', 

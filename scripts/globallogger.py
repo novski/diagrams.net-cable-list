@@ -1,5 +1,5 @@
 import os
-import logging, queue
+import logging
 from pathlib import Path
 import logging.handlers
 
@@ -14,33 +14,26 @@ def setup_custom_logger(args, name):
         return logger
         #logger.handlers.clear()
     logger.propagate = False
-    level = logging.getLevelName( args.logglevel.upper())    
-    logger.setLevel(level)
+    logger.setLevel(logging.DEBUG)
 
     # checking if the directory for logging exist or not.
     if not os.path.exists(args.loggpath):
         os.makedirs(args.loggpath)
     
     logfile = Path(args.loggpath + args.filepath[(args.filepath.rfind('/'))+1:] +'.log')
-    
+
     if os.path.exists(logfile):
         os.remove(logfile)
 
-    log_queue     = queue.Queue()
-    queue_handler = logging.handlers.QueueHandler(log_queue)       
-    #set the non-blocking handler first
-    logger.addHandler(queue_handler)
+    filehandler = logging.FileHandler(logfile)
+    filehandler.setLevel(logging.DEBUG)
+    consolehandler = logging.StreamHandler()
+    consolehandler.setLevel(logging.getLevelName(args.logglevel.upper()))
 
-    stream_handler = logging.StreamHandler()
-    stream_handler.setLevel(logging.DEBUG)
-    stream_handler.setFormatter(formatter)
+    filehandler.setFormatter(formatter)
+    consolehandler.setFormatter(formatter)
 
-    timerotating_handler = logging.handlers.TimedRotatingFileHandler(logfile, when='D', backupCount=30)
-    timerotating_handler.setLevel(level)
-    timerotating_handler.setFormatter(formatter)    
-    
-    listener = logging.handlers.QueueListener(log_queue, stream_handler, timerotating_handler, respect_handler_level=True)
-        
-    listener.start()
+    logger.addHandler(filehandler)
+    logger.addHandler(consolehandler)
 
     return logger

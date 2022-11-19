@@ -15,32 +15,39 @@ def get_cables_on_pages(list_of_page_elements):
         if not cables_on_pages_list:
             logger.info(f'page_name:{page_name} - There are no cables on this page')
             continue
-        if logger.level == 10: # 10 is the level of DEBUG
-            for cable_dict in cables_on_pages_list: 
-                logger.debug(f'(cable_dict):{cable_dict}')
+        for cable_dict in cables_on_pages_list: 
+            logger.debug(f'page_name:{page_name} - (cable_dict):{cable_dict}')
         logger.info(f'page_name:{page_name} - amount of cables: {len(cables_on_pages_list)}')
         cables_list += cables_on_pages_list
     return cables_list
 
-def set_cables_on_pages(list_of_page_elements, cables_list, last_number):
-    # TODO! why do we do that two times here?
-    number_of_cables = 0
+# TODO! get_cables_on_pages and set_cables_on_pages have double code snipets and get invoked to many times.
+# try if a abstraction of pages to cables in total is fisible and inject the pagename somehow more consistent.
+
+def set_cables_on_pages(list_of_page_elements, cables_list):
+    """
+    Here we get the cables from one page and set the new labels on it.
+    Then we get the cables from the same page again and store it in the cables_list
+    and return the list of cables.
+    """
+    last_number = get_last_number(cables_list)
+    logger.info(f'set all cable labels on all pages starting with last number:{last_number}')
     new_number = last_number + 1
     for page_elements in list_of_page_elements:
         page_name = page_elements.get('name')
-        cables_list = get_cable_list(page_elements, page_name)
-        if not cables_list:
+        cables_on_pages_list = get_cable_list(page_elements, page_name)
+        if not cables_on_pages_list:
             logger.info(f'page_name:{page_name} - There are no cables on this page')
             continue
-        new_number = labels.set_new_cable_label(page_elements, cables_list, new_number, page_name)
-        cables_list = get_cable_list(page_elements, page_name)
-        if not cables_list:
+        new_number = labels.set_new_cable_label(page_elements, cables_on_pages_list, new_number, page_name)
+        cables_on_pages_list = get_cable_list(page_elements, page_name)
+        if not cables_on_pages_list:
             logger.info(f'page_name:{page_name} - There are still no cables on this page')
             continue
-        if logger.level == 10: # 10 is the level of DEBUG
-            for cable_dict in cables_list: 
-                logger.debug(f'(cable_dict):{cable_dict}')
+        for cable_dict in cables_on_pages_list: 
+            logger.debug(f'page_name:{page_name} - (cable_dict):{cable_dict}')
         logger.info(f'page_name:{page_name} - amount of cables: {len(cables_list)}')
+        cables_list += cables_on_pages_list
     return cables_list
 
 def get_cable_list(page_elements, page_name):
@@ -53,6 +60,7 @@ def get_cable_list(page_elements, page_name):
     device_list = []
     list_of_cable_elements = get_cable_elements(page_elements)
     if not list_of_cable_elements:
+        logger.debug('TODO! list_of_cable_elements is empty returning NONE! correct?')
         return None
     for cable in list_of_cable_elements:
         cable_id = helpers.get_value_here_or_in_parent(cable,'id')
@@ -175,11 +183,13 @@ def get_connected_bold_text(elements,text_id):
         cable_id = helpers.get_value_here_or_in_parent(cable,'id')
         text_element = elements.find(".//*[@id='"+cable_dir+"']")
         if text_element is None:
+            logger.debug('TODO! text_element is empty returning NONE! correct?')
             return None
         text_dict = get_text(text_element)
         if not helpers.none_or_empty(text_dict.get('text')):
             if text_dict.get('text_bold'):
                 return text_dict
+    logger.debug('TODO! get_connected_bold_text is returning NONE! correct?')
     return None
 
 def get_text(element):

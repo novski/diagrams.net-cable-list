@@ -47,8 +47,10 @@ def create_csv(output_filepath,cables_list):
     csv_export_dict = {}
     for cable_dict in cables_list:
         for key in cable_dict:
+            logger.debug(f'd:{cable_dict}')
             if key.find('_parents') != -1:
                 for d in cable_dict:
+                    
                     pass#print(f'found _parents in cable_id: {cable_dict.get("cable_id")} d:{d}')
     # TODO: add to list and export as .csv.
     return output

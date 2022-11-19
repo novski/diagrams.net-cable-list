@@ -24,9 +24,7 @@ def scrape(args):
     renumber = args.renumber
     if eval(renumber):
         renumber = False
-        last_number = cables.get_last_number(cables_list)
-        logger.info(f'set all cable labels on all pages starting with last number:{last_number}')
-        cables_list = cables.set_cables_on_pages(list_of_page_elements, cables_list, last_number)
+        cables_list = cables.set_cables_on_pages(list_of_page_elements, cables_list)
     # start of export
     outputs = export.export(args, root, cables_list, list_of_page_elements)
     logger.info(f'total amount of cables: {len(cables_list)}')

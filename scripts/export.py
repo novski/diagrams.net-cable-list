@@ -1,7 +1,6 @@
 import logging
 from lxml import etree as ET
-from scripts import cables, export
-import json
+import csv, json
 
 
 logger = logging.getLogger('scraper')
@@ -46,19 +45,20 @@ def create_csv(output_filepath,cables_list):
     output = output_filepath + '.csv'
     csv_export_dict = {}
     for cable_dict in cables_list:
+        #logger.debug(f'csv-cable_dict:{cable_dict}')
         for key in cable_dict:
-            logger.debug(f'd:{cable_dict}')
             if key.find('_parents') != -1:
                 for d in cable_dict:
-                    
-                    pass#print(f'found _parents in cable_id: {cable_dict.get("cable_id")} d:{d}')
-    # TODO: add to list and export as .csv.
-    return output
+                    pass#logger.debug(f'found _parents in cable_id: {cable_dict.get("cable_id")} d:{d}')
+    # with open(output, 'w') as csvfile:
+    #     filewriter = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+    #     filewriter.writerow(['Name', 'Profession'])
+    return output    
 
 def create_json(output_filepath,cables_list,page_name):
     output = output_filepath + '.json'
     pages = {}
     pages[page_name] = cables_list
-    with open(output, 'a') as f:
-        f.write(json.dumps(pages, indent=2))
+    with open(output, 'w') as f:
+        f.write(json.dumps(cables_list, indent=2))
     return output

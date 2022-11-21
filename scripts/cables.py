@@ -33,6 +33,7 @@ def set_cables_on_pages(list_of_page_elements, cables_list):
     last_number = get_last_number(cables_list)
     logger.info(f'set all cable labels on all pages starting with last number:{last_number}')
     new_number = last_number + 1
+    cables_list = []
     for page_elements in list_of_page_elements:
         page_name = page_elements.get('name')
         cables_on_pages_list = get_cable_list(page_elements, page_name)
@@ -46,7 +47,7 @@ def set_cables_on_pages(list_of_page_elements, cables_list):
             continue
         for cable_dict in cables_on_pages_list: 
             logger.debug(f'page_name:{page_name} - (cable_dict):{cable_dict}')
-        logger.info(f'page_name:{page_name} - amount of cables: {len(cables_list)}')
+        logger.info(f'page_name:{page_name} - amount of cables: {len(cables_on_pages_list)}')
         cables_list += cables_on_pages_list
     return cables_list
 
@@ -59,8 +60,8 @@ def get_cable_list(page_elements, page_name):
     cable_list = []
     device_list = []
     list_of_cable_elements = get_cable_elements(page_elements)
-    if not list_of_cable_elements:
-        logger.debug('TODO! list_of_cable_elements is empty returning NONE! correct?')
+    print(f'{page_name} has -----> {len(list_of_cable_elements)} cable elements \n')
+    if not list_of_cable_elements: # in case of pages with no connections
         return None
     for cable in list_of_cable_elements:
         cable_id = helpers.get_value_here_or_in_parent(cable,'id')
@@ -91,10 +92,11 @@ def get_cable_list(page_elements, page_name):
                                 'cable_parent_id':cable_parent_id
                                 })
             cable_list.append(cable_dict)
-    logger.debug('device_list: !!!TODO!!!')
-    if logger.level == 10: # 10 is the level of DEBUG    
-        for device in device_list:
-            logger.debug(f'(device_list){device}')
+    print(f'cable_dict here we are -----> {cable_dict}\n')
+    helpers.debugJsonFile(cable_list)
+    logger.debug('device_list: !!!TODO!!!')   
+    for device in device_list:
+        logger.debug(f'(device_list){device}')
     return cable_list
 
 def get_cable_elements(page_elements):
@@ -102,6 +104,7 @@ def get_cable_elements(page_elements):
     Search for all source and target tags. 
     This leads to incomplete elements where the id is cut off. To reach the id of 
     the seldom <object> elements we have to get the parent of <mxCell>.
+    This (to reach the parent) is also why we need lxml and no the python standard xml library.
     """
     list_of_cable_elements = []
     list_of_cables_incomplete = page_elements.findall( ".//*[@source][@target]")
@@ -153,44 +156,15 @@ def get_connection_text(elements, connection_id, prefix):
         for num,group_id in enumerate(group_ids):
             text_dict.update({'group_id_'+str(num):group_id})
             list_of_parent_elements_in_same_group = elements.findall(".//*[@parent='"+group_id+"']")
-            group_dict = helpers.search_text_in_elements(elements,list_of_parent_elements_in_same_group)
+            group_dict = search_text_in_elements(elements,list_of_parent_elements_in_same_group)
             parents_text_list.extend(group_dict)
     # get containered bold texts
-    parents_container_text_dict = helpers.search_in_parents_for_container(elements,text_dict.get('parent_id'))
+    parents_container_text_dict = search_in_parents_for_container(elements,text_dict.get('parent_id'))
     if not helpers.none_or_empty(parents_container_text_dict):
         parents_text_list.append(parents_container_text_dict)
     text_dict.update({prefix+'_parents':parents_text_list})
     logger.debug(f'(texts_dict):{text_dict}')
     return text_dict
-
-def get_connected_bold_text(elements,text_id):
-    """ 
-    Find text_id in 'source' or 'target' 'tags' and get the bold text of 
-    the opposite cable end and only return if it is not empty. 
-    """
-    cable_a = elements.find(".//*[@source='"+text_id+"']")
-    cable_b = elements.find(".//*[@target='"+text_id+"']")
-    if helpers.none_or_empty(cable_a) and not helpers.none_or_empty(cable_b):
-        cable = cable_b
-        cable_dir = helpers.get_value_here_or_in_child(cable,'source')  
-    elif not helpers.none_or_empty(cable_a) and helpers.none_or_empty(cable_b):
-        cable = cable_a
-        cable_dir = helpers.get_value_here_or_in_child(cable,'target')
-    elif helpers.none_or_empty(cable_a) and helpers.none_or_empty(cable_b):
-        cable = ''
-    else: cable = ''
-    if not helpers.none_or_empty(cable):
-        cable_id = helpers.get_value_here_or_in_parent(cable,'id')
-        text_element = elements.find(".//*[@id='"+cable_dir+"']")
-        if text_element is None:
-            logger.debug('TODO! text_element is empty returning NONE! correct?')
-            return None
-        text_dict = get_text(text_element)
-        if not helpers.none_or_empty(text_dict.get('text')):
-            if text_dict.get('text_bold'):
-                return text_dict
-    logger.debug('TODO! get_connected_bold_text is returning NONE! correct?')
-    return None
 
 def get_text(element):
     """ get all relevant information from a text element as dict. """
@@ -223,12 +197,69 @@ def get_text(element):
     text_dict.update(text_bold_dict)
     text_dict.update(container_dict)
     text_dict.update(connectable_dict)
+
+    print(f'----------?------------:{text_dict}')
     return text_dict
 
-def toOutputXmlFile(elements):
-    """ Debug helper. Write elements to file 'output.xml'. """
-    tree = ET.ElementTree(elements)
-    ET.indent(tree, space="  ", level=0)
-    with open('output.xml', 'ab') as f:
-        tree.write(f, encoding='utf-8')
+def search_text_in_elements(elements,list_of_parent_elements_in_same_group):
+    """ 
+    get text from list of elements and append it as dict to list if it is bold. 
+    """
+    text_list_of_dicts = []
+    for element in list_of_parent_elements_in_same_group:
+        text_dict = get_text(element)
+        if not helpers.none_or_empty(text_dict):
+            if not helpers.none_or_empty(text_dict.get('text')):
+                if text_dict.get('text_bold'):
+                    text_list_of_dicts.append(text_dict)
+        text_id = text_dict.get('text_id')
+        text_dict = get_connected_bold_text(elements, text_id)
+        if not helpers.none_or_empty(text_dict):
+            if not helpers.none_or_empty(text_dict.get('text')):
+                text_list_of_dicts.append(text_dict)
+    return text_list_of_dicts
+
+def search_in_parents_for_container(elements,parent_id):
+    """ 
+    Use parent id to look up style for container. 
+    If container found search with container_id for source or target tag entry. 
+    If source id maches get target id and its text or vice versa.
+    """
+    if not helpers.none_or_empty(parent_id):
+        element = elements.find(".//*[@id='"+parent_id+"']")
+        text_dict = get_text(element)
+        if text_dict.get('container') and text_dict.get('connectable'):
+            text_id = text_dict.get('text_id')
+            text_dict = get_connected_bold_text(elements, text_id)
+            return text_dict
+
+def get_connected_bold_text(elements,text_id):
+    """ 
+    Find text_id in 'source' or 'target' 'tags' and get the bold text of 
+    the opposite cable end and only return if it is not empty. 
+    """
+    cable_a = elements.find(".//*[@source='"+text_id+"']")
+    cable_b = elements.find(".//*[@target='"+text_id+"']")
+    if helpers.none_or_empty(cable_a) and not helpers.none_or_empty(cable_b):
+        cable = cable_b
+        cable_dir = helpers.get_value_here_or_in_child(cable,'source')  
+    elif not helpers.none_or_empty(cable_a) and helpers.none_or_empty(cable_b):
+        cable = cable_a
+        cable_dir = helpers.get_value_here_or_in_child(cable,'target')
+    elif helpers.none_or_empty(cable_a) and helpers.none_or_empty(cable_b):
+        cable = ''
+    else: cable = ''
+    if not helpers.none_or_empty(cable):
+        cable_id = helpers.get_value_here_or_in_parent(cable,'id')
+        text_element = elements.find(".//*[@id='"+cable_dir+"']")
+        if text_element is None:
+            logger.debug('TODO! text_element is empty returning NONE! correct?')
+            return None
+        text_dict = get_text(text_element)
+        if not helpers.none_or_empty(text_dict.get('text')):
+            if text_dict.get('text_bold'):
+                return text_dict
+    logger.debug('TODO! get_connected_bold_text is returning NONE! correct?')
+    return None
+
 

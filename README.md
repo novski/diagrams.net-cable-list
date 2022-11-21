@@ -37,7 +37,8 @@ options:
 ```
 
 ## Restrictions:
-Not connected cables (loose ends) are omitted.
+- Not connected cables (loose ends) are omitted.
+- Cable Labels are fixed to digits 00000-09999.
 
 ## How to debugg:
 Debug in stdout with  ET.dump(elements) or to a file with toOutputXmlFile(elements) function.

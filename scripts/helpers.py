@@ -1,7 +1,10 @@
+
+from lxml import etree as ET
 import html
 import re
+import json
 import logging
-from scripts import labels, helpers, cables
+
 
 
 logger = logging.getLogger('scraper')
@@ -19,39 +22,6 @@ def search_in_parents_for_group_id(elements,parent_id):
             group_id = get_value_here_or_in_child(element,'id')
         else: group_id = ''
         return group_id, parent_id
-
-
-def search_text_in_elements(elements,list_of_parent_elements_in_same_group):
-    """ 
-    get text from list of elements and append it as dict to list if it is bold. 
-    """
-    text_list_of_dicts = []
-    for element in list_of_parent_elements_in_same_group:
-        text_dict = cables.get_text(element)
-        if not none_or_empty(text_dict):
-            if not none_or_empty(text_dict.get('text')):
-                if text_dict.get('text_bold'):
-                    text_list_of_dicts.append(text_dict)
-        text_id = text_dict.get('text_id')
-        text_dict = cables.get_connected_bold_text(elements, text_id)
-        if not none_or_empty(text_dict):
-            if not none_or_empty(text_dict.get('text')):
-                text_list_of_dicts.append(text_dict)
-    return text_list_of_dicts
-
-def search_in_parents_for_container(elements,parent_id):
-    """ 
-    Use parent id to look up style for container. 
-    If container found search with container_id for source or target tag entry. 
-    If source id maches get target id and its text or vice versa.
-    """
-    if not none_or_empty(parent_id):
-        element = elements.find(".//*[@id='"+parent_id+"']")
-        text_dict = cables.get_text(element)
-        if text_dict.get('container') and text_dict.get('connectable'):
-            text_id = text_dict.get('text_id')
-            text_dict = cables.get_connected_bold_text(elements, text_id)
-            return text_dict
 
 def a_or_b_if_populated(a, b):
     """ return the populated property or text 'both empty' or 'both populated' """
@@ -97,12 +67,9 @@ def find_style_tag_value(text,tag):
     """
     Search tags from in a string, return variables behind '='.
     """
-
     match = re.search(f"{tag}(.+?);",text)
-    match = match.groups(1) if match else -1
+    match = match.group()[-2] if match else -1
     return match
-
-    
 
 def detect_special_characer(pass_string):
     """
@@ -167,3 +134,14 @@ def none_or_empty(value):
     """ test if value is None or '' and return a boolean 'True' if so. """
     if value == None or value =='': return True
     else: return False
+
+def debugXmlFile(elements):
+    """ Debug helper. Write elements to file 'output.xml'. """
+    tree = ET.ElementTree(elements)
+    ET.indent(tree, space="  ", level=0)
+    with open('./log/outputToXmlFile.xml', 'ab') as f:
+        tree.write(f, encoding='utf-8')
+
+def debugJsonFile(input):
+    with open('./log/debugJsonFile.json', 'w') as f:
+        f.write(json.dumps(input, indent=2))

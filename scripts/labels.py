@@ -1,5 +1,5 @@
 import logging
-from scripts import cables, helpers
+from scripts import helpers
 
 
 logger = logging.getLogger('scraper')

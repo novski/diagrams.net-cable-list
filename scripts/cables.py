@@ -60,15 +60,15 @@ def get_cable_list(page_elements, page_name):
     cable_list = []
     device_list = []
     list_of_cable_elements = get_cable_elements(page_elements)
-    print(f'{page_name} has -----> {len(list_of_cable_elements)} cable elements \n')
+    logger.debug(f'\n{page_name} has {len(list_of_cable_elements)} cable elements')
     if not list_of_cable_elements: # in case of pages with no connections
         return None
     for cable in list_of_cable_elements:
         cable_id = helpers.get_value_here_or_in_parent(cable,'id')
-        cable_source_id = helpers.get_value_here_or_in_child(cable,'source')
-        cable_target_id = helpers.get_value_here_or_in_child(cable,'target')
-        cable_parent_id = helpers.get_value_here_or_in_child(cable,'parent')
-        if cable_source_id == cable_target_id:
+        source_id = helpers.get_value_here_or_in_child(cable,'source')
+        target_id = helpers.get_value_here_or_in_child(cable,'target')
+        parent_id = helpers.get_value_here_or_in_child(cable,'parent')
+        if source_id == target_id:
             logger.debug(f'(target_id) == (source_id): skipping inter box connections for design flexibility')
             continue
         cable_dict = {}
@@ -76,23 +76,22 @@ def get_cable_list(page_elements, page_name):
         if not helpers.none_or_empty(cable_label_dict):
             cable_dict.update(cable_label_dict)
         else: logger.debug(f'cable_label_dict of cable_id:{cable_id} was empty')
-        source_dict = get_connection_text(page_elements, cable_source_id,'source')
+        source_dict = get_connection_text(page_elements, source_id,'source')
         if not helpers.none_or_empty(source_dict):
             cable_dict.update(source_dict)
         else: logger.debug(f'source_dict of cable_id:{cable_id} was empty')
-        target_dict = get_connection_text(page_elements, cable_target_id,'target')
+        target_dict = get_connection_text(page_elements, target_id,'target')
         if not helpers.none_or_empty(target_dict):
             cable_dict.update(target_dict)
         else: logger.debug(f'target_dict of cable_id:{cable_id} was empty')
         if len(cable_dict):
             cable_dict.update({ 'page_name':page_name,
                                 'cable_id':cable_id,
-                                'cable_source_id':cable_source_id,  
-                                'cable_target_id':cable_target_id,   
-                                'cable_parent_id':cable_parent_id
+                                'source_id':source_id,  
+                                'target_id':target_id,   
+                                'parent_id':parent_id
                                 })
             cable_list.append(cable_dict)
-    print(f'cable_dict here we are -----> {cable_dict}\n')
     helpers.debugJsonFile(cable_list)
     logger.debug('device_list: !!!TODO!!!')   
     for device in device_list:
@@ -128,20 +127,22 @@ def get_last_number(cables_list):
     label_numbers.sort(reverse=True)
     return label_numbers[0]
 
-def get_connection_text(elements, connection_id, prefix):
+def get_connection_text(elements, text_id, prefix):
     """ 
-    Text elements are linked by a tag 'parent' to cables.
-    Search for attribute 'parent' to get id and value of it.
+    Text elements connected to cables are linked by a id to the cable source of target tag.
+    Search for attribute 'id=text_id' to get id and value of the Text element.
     """
-    text_element = elements.find(".//*[@id='"+connection_id+"']")
+    text_element = elements.find(".//*[@id='"+text_id+"']")
     parents_text_list = []
     group_ids =[]
     text_dict = {}
+
     text_dict.update(get_text(text_element))
     if not text_dict: return
     elif helpers.none_or_empty(text_dict.get('text')): return
     elif text_dict.get('text_bold'): return
     elif text_dict.get('text') == 'both empty': return
+
     text_dict = helpers.rename_keys(text_dict,{'text':prefix+'_text'})
     parent_id = text_dict.get('parent_id')
     # get parent element with bold text
@@ -150,11 +151,11 @@ def get_connection_text(elements, connection_id, prefix):
         parents_text_list.append(parent_element)
     # get grouped bold texts 
     while parent_id > '1':
-        group_id, parent_id = helpers.search_in_parents_for_group_id(elements,parent_id)
+        group_id, parent_id = helpers.search_in_elements_for_group_id(elements,parent_id)
         group_ids.extend([group_id])
     if not helpers.none_or_empty(group_ids):
         for num,group_id in enumerate(group_ids):
-            text_dict.update({'group_id_'+str(num):group_id})
+            text_dict.update({prefix+'_group_id_'+str(num):group_id})
             list_of_parent_elements_in_same_group = elements.findall(".//*[@parent='"+group_id+"']")
             group_dict = search_text_in_elements(elements,list_of_parent_elements_in_same_group)
             parents_text_list.extend(group_dict)
@@ -197,8 +198,6 @@ def get_text(element):
     text_dict.update(text_bold_dict)
     text_dict.update(container_dict)
     text_dict.update(connectable_dict)
-
-    print(f'----------?------------:{text_dict}')
     return text_dict
 
 def search_text_in_elements(elements,list_of_parent_elements_in_same_group):
@@ -253,13 +252,11 @@ def get_connected_bold_text(elements,text_id):
         cable_id = helpers.get_value_here_or_in_parent(cable,'id')
         text_element = elements.find(".//*[@id='"+cable_dir+"']")
         if text_element is None:
-            logger.debug('TODO! text_element is empty returning NONE! correct?')
             return None
         text_dict = get_text(text_element)
         if not helpers.none_or_empty(text_dict.get('text')):
             if text_dict.get('text_bold'):
                 return text_dict
-    logger.debug('TODO! get_connected_bold_text is returning NONE! correct?')
     return None
 
 

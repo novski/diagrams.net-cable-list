@@ -6,21 +6,21 @@ import json
 import logging
 
 
-
 logger = logging.getLogger('scraper')
 
-def search_in_parents_for_group_id(elements,parent_id):
+def search_in_elements_for_group_id(elements,id):
     """ 
     searches for given parent_id in start_element and climbs up until 
-    if finds the group style value. Then returns the id of the group and its parent. 
+    it finds the group style value. Then returns the id of the group and its parent. 
     """
-    element = elements.find(".//*[@id='"+parent_id+"']")
+    element = elements.find(".//*[@id='"+id+"']")
     if not none_or_empty(element):
         parent_id = get_value_here_or_in_child(element,'parent')
         style = get_value_here_or_in_child(element,'style')
-        if not find_style_tag_value(style, 'group') == -1:
+        if not 'group' in style:
             group_id = get_value_here_or_in_child(element,'id')
-        else: group_id = ''
+        elif 'group' in style:
+            group_id = id
         return group_id, parent_id
 
 def a_or_b_if_populated(a, b):

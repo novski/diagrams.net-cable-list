@@ -84,6 +84,7 @@ def get_cable_list(page_elements, page_name):
         if not helpers.none_or_empty(target_dict):
             cable_dict.update(target_dict)
         else: logger.debug(f'target_dict of cable_id:{cable_id} was empty')
+        #cable_dict.update({"len(cable_dict)":len(cable_dict)})
         if len(cable_dict):
             cable_dict.update({ 'page_name':page_name,
                                 'cable_id':cable_id,

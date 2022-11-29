@@ -43,22 +43,65 @@ def create_drawio(output_filepath, root):
 
 def create_csv(output_filepath,cables_list):
     output = output_filepath + '.csv'
-    csv_export_dict = {}
+    title = [
+        'Page', 
+        'Source Tag', 
+        'Source Device', 
+        'Source Interface',
+        '-',
+        'Target Interface', 
+        'Target Device',
+        'Target Tag'
+        ]
+    csv_cable_list = []
     for cable_dict in cables_list:
-        #logger.debug(f'csv-cable_dict:{cable_dict}')
-        for key in cable_dict:
-            if key.find('_parents') != -1:
-                for d in cable_dict:
-                    pass#logger.debug(f'found _parents in cable_id: {cable_dict.get("cable_id")} d:{d}')
-    # with open(output, 'w') as csvfile:
-    #     filewriter = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-    #     filewriter.writerow(['Name', 'Profession'])
+        page_name =  cable_dict.get("page_name")
+        source_number =  cable_dict.get("label_0_value")
+        source_text =  cable_dict.get("source_text")
+        target_text =  cable_dict.get("target_text")
+        target_number =  cable_dict.get("label_1_value")
+        source_parents_texts = [x["text"] for x in  cable_dict.get("source_parents")]
+        target_parents_texts = [x["text"] for x in  cable_dict.get("target_parents")]
+        line = [page_name]
+        if not source_number is None:
+            line.append("'"+source_number)
+        else: line.append('-')
+        if not source_parents_texts is None:
+            if len(source_parents_texts) > 1:
+                source_parents_text = ', '.join(source_parents_texts)
+                line.append(source_parents_text)
+            else: line.extend(source_parents_texts)
+        else: line.append('-')
+        if not source_text is None:
+            line.append(source_text)
+        else: line.append('-')
+        line.append("-")
+        if not target_text is None:
+            line.append(target_text)
+        else: line.append('-')
+        if not target_parents_texts is None:
+            if len(target_parents_texts) > 1:
+                target_parents_text = ', '.join(target_parents_texts)
+                line.append(target_parents_text)
+            else: line.extend(target_parents_texts)
+        else: line.append('-')
+        if not target_number is None:
+            line.append("'"+target_number)
+        else: line.append('-')
+        csv_cable_list.append(line)
+    with open(output, 'w') as csvfile:
+        filewriter = csv.writer(
+            csvfile, 
+            delimiter=',',
+            quoting=csv.QUOTE_MINIMAL
+            )
+        filewriter.writerow(title)
+        for csv_cable in csv_cable_list:
+            filewriter.writerow(csv_cable)
     return output    
 
 def create_json(output_filepath,cables_list,page_name):
     output = output_filepath + '.json'
-    pages = {}
-    pages[page_name] = cables_list
     with open(output, 'w') as f:
         f.write(json.dumps(cables_list, indent=2))
     return output

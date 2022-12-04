@@ -1,6 +1,7 @@
 import logging
 from lxml import etree as ET
 import csv, json
+from scripts import helpers
 
 
 logger = logging.getLogger('scraper')
@@ -60,8 +61,14 @@ def create_csv(output_filepath,cables_list):
         source_text =  cable_dict.get("source_text")
         target_text =  cable_dict.get("target_text")
         target_number =  cable_dict.get("label_1_value")
-        source_parents_texts = [x["text"] for x in  cable_dict.get("source_parents")]
-        target_parents_texts = [x["text"] for x in  cable_dict.get("target_parents")]
+        source_parents = cable_dict.get("source_parents")
+        source_parents_texts = ''
+        target_parents = cable_dict.get("target_parents")
+        target_parents_texts = ''
+        if not helpers.none_or_empty(source_parents):
+            source_parents_texts = [x["text"] for x in  source_parents]
+        if not helpers.none_or_empty(target_parents):
+            target_parents_texts = [x["text"] for x in  target_parents]
         line = [page_name]
         if not source_number is None:
             line.append("'"+source_number)

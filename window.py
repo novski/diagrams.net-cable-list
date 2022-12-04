@@ -1,9 +1,11 @@
 import os
 import wx
+from wx.lib import inspection as insp
 import subprocess
 
-wildcard = "Python source (*.py)|*.py|" \
-            "All files (*.*)|*.*"
+wildcard = "Draw.io source (*.drawio)|*.drawio|" \
+            "XML source (*.xml)|*.xml|" \
+            #"All files (*.*)|*.*"
 
 wxEVT_SINGLEFILE_DROPPED = wx.NewEventType()
 EVT_SINGLEFILE_DROPPED = wx.PyEventBinder(wxEVT_SINGLEFILE_DROPPED, 1)
@@ -50,7 +52,7 @@ class MyFrame(wx.Frame):
         self.exportCablelist = False
         self.exportCablelistFiletype = 'csv'
         self.output = False
-
+        #insp.InspectionTool().Show()
         wx.Frame.__init__(self, None, title=wx.GetApp().GetAppName())
 
         self._createControls()
@@ -136,12 +138,12 @@ class MyFrame(wx.Frame):
         executeCancelDlgBtn.Bind(wx.EVT_BUTTON, self._executeCommands)
         stbSzr.Add(executeOkDlgBtn, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM, 5)
         stbSzr.Add(executeCancelDlgBtn, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM, 5)
-        szrMain.Add(stbSzr, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM, 5)
+        szrMain.Add(stbSzr, 1, wx.LEFT|wx.RIGHT|wx.BOTTOM|wx.EXPAND, 5)
 
         self.txtresults = wx.TextCtrl(stBox, 
                                       size=(420,200), 
                                       style = wx.TE_MULTILINE|wx.TE_READONLY|wx.HSCROLL)
-        stbSzr.Add(self.txtresults, 1, flag=wx.LEFT|wx.RIGHT|wx.EXPAND, border=5)
+        stbSzr.Add(self.txtresults, 1, flag=wx.LEFT|wx.RIGHT|wx.BOTTOM|wx.EXPAND, border=5)
 
         szrMain.AddSpacer(10)
 
@@ -244,15 +246,14 @@ class MyFrame(wx.Frame):
                     line = proc.stdout.readline()                        
                     #wx.Yield()
                     if line.strip() == "":
-                        print('one')
+                        print('line empty')
                         pass
                     else:
-                        print(line.strip())
+                        self.txtresults.AppendText(line.strip())
+                        self.txtresults.AppendText('\n')
                     if not line: 
                         print('break')
                         break
-
-                    #self.txtresults.AppendText(line.strip())
                 proc.wait()
         else:
             print(f'exec incomplete: {self.exec}')

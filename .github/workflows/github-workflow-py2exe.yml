@@ -21,4 +21,3 @@ jobs:
       - run: pip install py2exe
       - run: py setup.py install
       - run: py setup.py py2exe
-      - run: echo "[STATUS] is; ${{ job.status }}."

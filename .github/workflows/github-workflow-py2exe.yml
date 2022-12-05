@@ -8,13 +8,19 @@ jobs:
     name: Create Windows Release
     runs-on: windows-latest
     steps:
+      - run: echo "The job was automatically triggered by a actions event named; ${{ github.event_name }}."
+      - run: echo "This job is now running on a ${{ runner.os }} server hosted by GitHub!"
+      - run: echo "The name of your repository is ${{ github.repository }}and your branch is ${{ github.ref }} ."
       - name: Checkout code
-      - uses: actions/checkout@v3
+        uses: actions/checkout@v3
         with:
-          ref: main
+          ref: WorkInProgress
+      - run: echo "[STATUS] is; ${{ job.status }}."
       - name: Build with py2exe
         run:
+          pip install attrdict3
           pip install -r requirements.txt
           pip install py2exe
           py setup.py install
           py setup.py py2exe
+      - run: echo "[STATUS] is; ${{ job.status }}."

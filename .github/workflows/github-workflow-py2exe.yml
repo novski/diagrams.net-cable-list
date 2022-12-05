@@ -16,10 +16,9 @@ jobs:
         with:
           ref: WorkInProgress
       - run: echo "[STATUS] is; ${{ job.status }}."
-      - name: Build with py2exe
-        - run: pip install attrdict3 requests
-        - run: pip install -r requirements.txt
-        - run: pip install py2exe
-        - run: py setup.py install
-        - run: py setup.py py2exe
-        - run: echo "[STATUS] is; ${{ job.status }}."
+      - run: pip install attrdict3 requests
+      - run: pip install -r requirements.txt
+      - run: pip install py2exe
+      - run: py setup.py install
+      - run: py setup.py py2exe
+      - run: echo "[STATUS] is; ${{ job.status }}."

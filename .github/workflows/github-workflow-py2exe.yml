@@ -13,11 +13,11 @@ jobs:
       - run: echo "The name of your repository is ${{ github.repository }}and your branch is ${{ github.ref }} ."
       - name: Checkout code
         uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
+          python-version: '3.10'
           ref: WorkInProgress
       - run: echo "[STATUS] is; ${{ job.status }}."
-      - run: pip install attrdict3 requests
-      - run: pip install -r requirements.txt
-      - run: pip install py2exe
-      - run: py setup.py install
-      - run: py setup.py py2exe
+      - run: pip install pyinstaller
+      - run: echo "[STATUS] is; ${{ job.status }}."
+      - run: pyinstaller --onefile --windowed --name drawio-cable-labler --icon ./icon/icon.iconset/icon.icns window.py

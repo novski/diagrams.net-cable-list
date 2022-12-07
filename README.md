@@ -20,7 +20,7 @@ cables connected to boxes with "bold" text and adds this instead.
 2. install requirements.txt `python -m pip install -r requirements.txt`
 3. execute `python main.py -h` for list of functions
 
-```
+```bash
 usage: main.py [-h] [-o OUTPUTPATH] [-n OUTPUTNAME] [-c [CABLESHEET]] [-nr [RENUMBER]] [-log [LOGGLEVEL]] [-loggpath [LOGGPATH]] filepath
 
 positional arguments:
@@ -44,4 +44,4 @@ options:
 Debug in stdout with  ET.dump(elements) or to a file with toOutputXmlFile(elements) function.
 
 ## TODO:
-- [] Add CSV export
+- [] filter CSV export for !page_header lines

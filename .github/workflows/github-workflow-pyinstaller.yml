@@ -2,7 +2,7 @@ name: Build
 on:
   workflow_dispatch:
   push:
-    branches: ["main", "master"]
+    branches: ["main", "WorkInProgress"]
 jobs:
   build:
     name: Create Windows Release

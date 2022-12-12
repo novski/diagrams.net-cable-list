@@ -23,7 +23,7 @@ jobs:
       - run: pip install pillow
       - run: echo "[STATUS] is; ${{ job.status }}."
       - run: pyinstaller --onefile --windowed --name drawio-cable-labler --icon ./icon/icon.iconset/icon.icns window.py
-      - run: dir
+      - run: dir /dist
       - name: Release
         uses: softprops/action-gh-release@v1
         with:

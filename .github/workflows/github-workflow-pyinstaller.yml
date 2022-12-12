@@ -24,7 +24,9 @@ jobs:
       - run: echo "[STATUS] is; ${{ job.status }}."
       - run: pyinstaller --onefile --windowed --name drawio-cable-labler --icon ./icon/icon.iconset/icon.icns window.py
       - run: dir
-      - run: dir ${{ env.GITHUB_WORKSPACE }}/dist
+      - run: ls
+      - run: ls ${{ env.GITHUB_WORKSPACE }}/dist/ 
+      - run: dir ${{ env.GITHUB_WORKSPACE }}/dist/
       - name: Release
         uses: softprops/action-gh-release@v1
         with:

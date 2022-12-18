@@ -45,7 +45,8 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            dist/**
+            dist/drawio-cable-labler
+            dist/drawio-cable-labler.app
           body_path: changelog.md
       
 

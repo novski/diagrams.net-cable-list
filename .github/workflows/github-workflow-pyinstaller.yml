@@ -43,8 +43,9 @@ jobs:
       - name: Zipping File - ${{ runner.os }}
         if: runner.os == 'macOS'
         run: |
-          cd dist/ &&
+          cd dist/
           zip -r9 drawio-cable-labler-macos drawio-cable-labler.app/
+      - run: ls dist/
       
       - uses: actions/upload-artifact@v3
         with:

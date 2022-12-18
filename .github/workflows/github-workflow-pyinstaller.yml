@@ -2,8 +2,8 @@ name: Build
 
 on:
   push:
-#     tags:
-#       - 'v[0-9]+.[0-9]+.[0-9]+'
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
 jobs:
   release:
     strategy:
@@ -28,11 +28,10 @@ jobs:
         
       - name: Install Dependencies
         run: |
-          python -m pip install --upgrade pip
           pip install pyinstaller
           pip install Pillow
           
-      - name: Install Dependencies
+      - name: Install from requirements.txt
         if: runner.os == 'macOS' ||  runner.os == 'Windows'
         run: |
           pip install -r requirements.txt
@@ -46,11 +45,6 @@ jobs:
           cd dist/
           zip -r9 drawio-cable-labler-macos drawio-cable-labler.app/
       
-      - uses: actions/upload-artifact@v3
-        with:
-          name: my-artifact
-          path: dist/drawio-cable-labler-macos.zip
-      
       - name: Release Windows Executable
         if: runner.os == 'Windows' && startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
@@ -62,7 +56,7 @@ jobs:
         if: runner.os == 'macOS' && startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
-          files: drawio-cable-labler-macOS-app.zip
+          files: dist/drawio-cable-labler-macos.zip
           body_path: changelog.md
       
       - name: Release Linux Executable

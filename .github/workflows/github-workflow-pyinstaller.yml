@@ -32,7 +32,7 @@ jobs:
       - name: Install Dependencies
         run: |
           pip install pyinstaller
-          pip install -r requirements.txt
+          # pip install -r requirements.txt
             
       - name: Generate Execulaable 
         run: pyinstaller --onefile --windowed --name drawio-cable-labler --icon ./icon/icon.iconset/icon.icns window.py

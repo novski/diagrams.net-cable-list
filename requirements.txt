@@ -1,5 +1,6 @@
-lxml
-numpy
-Pillow
-six
-wxPython
+attrdict==2.0.1
+lxml==4.9.1
+numpy==1.23.5
+Pillow==9.3.0
+six==1.16.0
+wxPython==4.2.0

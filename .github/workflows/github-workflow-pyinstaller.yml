@@ -2,14 +2,13 @@ name: Build
 
 on:
   push:
-    # tags:
-    #   - 'v[0-9]+.[0-9]+.[0-9]+'
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
 jobs:
   release:
     strategy:
       matrix:
-        # os: [ macos-latest, windows-latest, ubuntu-latest ]
-        os: [ ubuntu-latest ]
+        os: [ macos-latest, windows-latest, ubuntu-latest ]
         
     name: Create ${{ matrix.os }} Release
     runs-on: ${{ matrix.os }}
@@ -29,8 +28,7 @@ jobs:
       - name: Install Dependencies
         run: |
           pip install pyinstaller
-          pip install attrdict
-          pip install -r requirements.txt
+          pip install Pillow
           
       - name: Install Dependencies
         if: runner.os == 'macOS' ||  runner.os == 'Windows'

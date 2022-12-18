@@ -15,10 +15,11 @@ jobs:
     steps:
       - run: echo "The job was automatically triggered by a actions event named; ${{ github.event_name }}."
       - run: echo "This job is now running on a ${{ runner.os }} server hosted by GitHub!"
-      - run: echo "The name of your repository is ${{ github.repository }}and your branch is ${{ github.ref }} ."
+      - run: echo "The name of your repository is ${{ github.repository }} and your branch is ${{ github.ref }} ."
       - name: Checkout code
         uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - name: Setup Python
+        uses: actions/setup-python@v4
         with:
           python-version: '3.10'
       - name: Install Dependencies
@@ -28,25 +29,26 @@ jobs:
       - run: echo "[STATUS] is; ${{ job.status }}."
       - name: Generate Execulaable 
         run: pyinstaller --onefile --windowed --name drawio-cable-labler --icon ./icon/icon.iconset/icon.icns window.py
-      - name: Release Windows
-        if: ${{ matrix.os }} == "windows-latest"
+     
+      - name: Release Windows Executable
+        if: ${{ matrix.os }} == "windows-latest" && startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
-          files: dist/drawio-cable-labeler.exe
+          files: dist/drawio-cable-labler.exe
           body_path: changelog.md
           
-      - name: Release MacOS
-        if: ${{ matrix.os }} == "macos-latest"
+      - name: Release MacOS Executable
+        if: ${{ matrix.os }} == "macos-latest" && startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
-          files: dist/drawio-cable-labeler.app
+          files: dist/drawio-cable-labler.app
           body_path: changelog.md
       
-      - name: Release Linux
-        if: ${{ matrix.os }} == "macos-latest"
+      - name: Release Linux Executable
+        if: ${{ matrix.os }} == "macos-latest" && startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
-          files: dist/drawio-cable-labeler
+          files: dist/drawio-cable-labler
           body_path: changelog.md
       
       

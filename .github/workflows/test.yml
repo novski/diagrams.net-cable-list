@@ -19,12 +19,18 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.6.15'
+          python-version: '3.7.13'
         
       - name: Install Dependencies
         run: |
           pip install pyinstaller
-          pip install -r requirements.txt
+          pip install attrdict
+          pip install lxml
+          pip install numpy
+          pip install Pillow
+          pip install six
+          pip install wxPython
+          
 
       - name: Generate Executable 
         run: pyinstaller --onefile --windowed --name drawio-cable-labler --icon icon/icon.iconset/icon.icns window.py

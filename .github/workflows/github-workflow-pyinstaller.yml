@@ -34,7 +34,6 @@ jobs:
         if: runner.os == 'Windows' && startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
-          name: Windows EXE
           files: dist/*
           body_path: changelog.md
           
@@ -42,7 +41,6 @@ jobs:
         if: runner.os == 'macOS' && startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
-          name: MacOS App and Linux Executable 
           files: dist/*
           body_path: changelog.md
       

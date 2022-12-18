@@ -37,7 +37,9 @@ jobs:
       - name: Generate Execulaable 
         run: pyinstaller --onefile --windowed --name drawio-cable-labler --icon ./icon/icon.iconset/icon.icns window.py
       
-      - run: ls dist/
+      - run: |
+          ls dist/
+          pwd
       
       - name: Release Windows Executable
         if: runner.os == 'Windows' && startsWith(github.ref, 'refs/tags/')
@@ -46,14 +48,14 @@ jobs:
           files: dist/*
           body_path: changelog.md
           
-      - name: Release macOS and Linux Executable
+      - name: Release macOS app
         if: runner.os == 'macOS' && startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
           files: dist/drawio-cable-labler.app
           body_path: changelog.md
       
-      - name: Release Linux and Linux Executable
+      - name: Release Linux Executable
         if: runner.os == 'Linux' && startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:

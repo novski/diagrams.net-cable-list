@@ -8,7 +8,7 @@ jobs:
   release:
     strategy:
       matrix:
-        os: [macos-latest, windows-latest]
+        os: [ windows-latest]
         
     name: Create ${{ matrix.os }} Release
     runs-on: ${{ matrix.os }}
@@ -28,8 +28,7 @@ jobs:
       - run: pyinstaller --onefile --windowed --name drawio-cable-labler --icon ./icon/icon.iconset/icon.icns window.py
       - run: dir
       - run: ls
-      - run: ls ${{ env.GITHUB_WORKSPACE }}/dist/ 
-      - run: dir ${{ env.GITHUB_WORKSPACE }}/dist/
+      - run: ls dist/ 
 #       - name: Release
 #         uses: softprops/action-gh-release@v1
 #         with:

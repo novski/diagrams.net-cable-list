@@ -8,7 +8,7 @@ jobs:
   release:
     strategy:
       matrix:
-        os: [ windows-latest ]
+        os: [ macos-latest, windows-latest ]
         
     name: Create ${{ matrix.os }} Release
     runs-on: ${{ matrix.os }}
@@ -26,9 +26,10 @@ jobs:
       - run: pip install -r requirements.txt
       - run: echo "[STATUS] is; ${{ job.status }}."
       - run: pyinstaller --onefile --windowed --name drawio-cable-labler --icon ./icon/icon.iconset/icon.icns window.py
-      - run: ls 
-      - name: Release Windows
-        if: ${{ matrix.os }} == "windows-latest"
-        uses: softprops/action-gh-release@v1
-        with:
-          files: dist/drawio-cable-labeler.exe
+      - run: ls dist/
+#       - name: Release Windows
+#         if: ${{ matrix.os }} == "windows-latest"
+#         uses: softprops/action-gh-release@v1
+#         with:
+#           files: dist/drawio-cable-labeler.exe
+      

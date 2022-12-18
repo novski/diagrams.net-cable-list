@@ -2,8 +2,8 @@ name: Build
 
 on:
   push:
-    tags:
-      - '*'
+#     tags:
+#       - '*'
 jobs:
   release:
     strategy:
@@ -26,12 +26,18 @@ jobs:
         run: |
           pip install pyinstaller
           pip install -r requirements.txt
-      - run: echo "[STATUS] is; ${{ job.status }}."
+      - run: echo "[STATUS] is ${{ job.status }}."
       - name: Generate Execulaable 
         run: pyinstaller --onefile --windowed --name drawio-cable-labler --icon ./icon/icon.iconset/icon.icns window.py
-     
+      
+      - name: test ${{ matrix.os }}
+        if:  matrix.os == "windows-latest"
+        run: |
+          echo "${{ matrix.os }}"
+          ls dist
+        
       - name: Release Windows Executable
-        if: ${{ matrix.os }} == "windows-latest" && startsWith(github.ref, 'refs/tags/')
+        if: matrix.os == "windows-latest" && startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
           name: Windows EXE
@@ -39,7 +45,7 @@ jobs:
           body_path: changelog.md
           
       - name: Release MacOS Executable
-        if: ${{ matrix.os }} == "macos-latest" && startsWith(github.ref, 'refs/tags/')
+        if: matrix.os == "macos-latest" && startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
           name: MacOS App
@@ -47,7 +53,7 @@ jobs:
           body_path: changelog.md
       
       - name: Release Linux Executable
-        if: ${{ matrix.os }} == "macos-latest" && startsWith(github.ref, 'refs/tags/')
+        if: matrix.os == "macos-latest" && startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
           name: Linux Executable

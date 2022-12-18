@@ -1,0 +1,32 @@
+name: Test
+
+on:
+  push:
+
+jobs:
+  release:  
+        
+    name: Create Release
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "The job was automatically triggered by a actions event named; ${{ github.event_name }}."
+      - run: echo "This job is now running on a ${{ runner.os }} server hosted by GitHub!"
+      - run: echo "The name of your repository is ${{ github.repository }} and your branch is ${{ github.ref }} ."
+      
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.6'
+        
+      - name: Install Dependencies
+        run: |
+          pip install pyinstaller
+          pip install -r requirements.txt
+
+      - name: Generate Executable 
+        run: pyinstaller --onefile --windowed --name drawio-cable-labler --icon icon/icon.iconset/icon.icns window.py
+
+    

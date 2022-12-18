@@ -30,6 +30,11 @@ jobs:
         run: |
           pip install pyinstaller
           pip install Pillow
+          
+      - name: Install Dependencies
+        if: runner.os == 'macOS'
+        run: |
+          pip install -r requirements.txt
 
       - name: Generate Executable 
         run: pyinstaller --onefile --windowed --name drawio-cable-labler --icon ./icon/icon.iconset/icon.icns window.py

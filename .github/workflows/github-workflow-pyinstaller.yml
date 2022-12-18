@@ -2,13 +2,14 @@ name: Build
 
 on:
   push:
-    tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+'
+#     tags:
+#       - 'v[0-9]+.[0-9]+.[0-9]+'
 jobs:
   release:
     strategy:
       matrix:
-        os: [ macos-latest, windows-latest, ubuntu-latest ]
+#         os: [ macos-latest, windows-latest, ubuntu-latest ]
+          os: ['macos-latest']
         
     name: Create ${{ matrix.os }} Release
     runs-on: ${{ matrix.os }}
@@ -32,7 +33,12 @@ jobs:
 
       - name: Generate Executable 
         run: pyinstaller --onefile --windowed --name drawio-cable-labler --icon ./icon/icon.iconset/icon.icns window.py
-        
+      
+      - uses: actions/upload-artifact@v3
+        with:
+          name: my-artifact
+          path: dist
+
       - name: Zipping File - ${{ runner.os }}
         if: runner.os == 'macOS'
         uses: vimtor/action-zip@v1

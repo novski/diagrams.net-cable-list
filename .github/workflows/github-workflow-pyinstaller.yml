@@ -37,15 +37,16 @@ jobs:
       - name: Generate Execulaable 
         run: pyinstaller --onefile --windowed --name drawio-cable-labler --icon ./icon/icon.iconset/icon.icns window.py
       
-      - run: |
-          ls dist/
-          pwd
-      
-      - name: Install Extra Dependencies - Linix 
+      - name: Removing Extra file - ${{ runner.os }}
         if: runner.os == 'macOS'
-        uses: montudor/action-zip@v1
+        run: rm dist/drawio-cable-labler
+
+      - name: Zipping File - ${{ runner.os }}
+        if: runner.os == 'macOS'
+        uses: vimtor/action-zip@v1
         with:
-          args: zip -qq -r dist/drawio-cable-labler.macOS-app.zip dist/drawio-cable-labler.app
+          files: dist/*
+          dest: dist/drawio-cable-labler.macOS-app.zip
       
       - name: Release Windows Executable
         if: runner.os == 'Windows' && startsWith(github.ref, 'refs/tags/')

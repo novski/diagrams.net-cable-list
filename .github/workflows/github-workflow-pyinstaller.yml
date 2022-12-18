@@ -2,12 +2,16 @@ name: Build
 
 on:
   push:
-    tags:
-      - '*'
+#     tags:
+#       - '*'
 jobs:
-  build:
-    name: Create Windows Release
-    runs-on: windows-latest
+  release:
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+        
+    name: Create ${{ matrix.os }} Release
+    runs-on: ${{ matrix.os }}
     steps:
       - run: echo "The job was automatically triggered by a actions event named; ${{ github.event_name }}."
       - run: echo "This job is now running on a ${{ runner.os }} server hosted by GitHub!"
@@ -17,17 +21,16 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-          ref: WorkInProgress
       - run: echo "[STATUS] is; ${{ job.status }}."
       - run: pip install pyinstaller
-      - run: pip install pillow
+      - run: pip install -r requirements.txt
       - run: echo "[STATUS] is; ${{ job.status }}."
       - run: pyinstaller --onefile --windowed --name drawio-cable-labler --icon ./icon/icon.iconset/icon.icns window.py
       - run: dir
       - run: ls
       - run: ls ${{ env.GITHUB_WORKSPACE }}/dist/ 
       - run: dir ${{ env.GITHUB_WORKSPACE }}/dist/
-      - name: Release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: ./dist/drawio-cable-labeler.exe
+#       - name: Release
+#         uses: softprops/action-gh-release@v1
+#         with:
+#           files: ./dist/drawio-cable-labeler.exe

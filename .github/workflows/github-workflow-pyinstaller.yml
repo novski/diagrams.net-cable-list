@@ -2,8 +2,8 @@ name: Build
 
 on:
   push:
-#     tags:
-#       - '*'
+    tags:
+      - '*'
 jobs:
   release:
     strategy:
@@ -21,15 +21,32 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
+      - name: Install Dependencies
+        run: |
+          pip install pyinstaller
+          pip install -r requirements.txt
       - run: echo "[STATUS] is; ${{ job.status }}."
-      - run: pip install pyinstaller
-      - run: pip install -r requirements.txt
-      - run: echo "[STATUS] is; ${{ job.status }}."
-      - run: pyinstaller --onefile --windowed --name drawio-cable-labler --icon ./icon/icon.iconset/icon.icns window.py
-      - run: ls dist/
-#       - name: Release Windows
-#         if: ${{ matrix.os }} == "windows-latest"
-#         uses: softprops/action-gh-release@v1
-#         with:
-#           files: dist/drawio-cable-labeler.exe
+      - name: Generate Execulaable 
+        run: pyinstaller --onefile --windowed --name drawio-cable-labler --icon ./icon/icon.iconset/icon.icns window.py
+      - name: Release Windows
+        if: ${{ matrix.os }} == "windows-latest"
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/drawio-cable-labeler.exe
+          body_path: changelog.md
+          
+      - name: Release MacOS
+        if: ${{ matrix.os }} == "macos-latest"
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/drawio-cable-labeler.app
+          body_path: changelog.md
+      
+      - name: Release Linux
+        if: ${{ matrix.os }} == "macos-latest"
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/drawio-cable-labeler
+          body_path: changelog.md
+      
       

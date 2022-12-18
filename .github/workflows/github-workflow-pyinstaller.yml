@@ -31,7 +31,7 @@ jobs:
         run: pyinstaller --onefile --windowed --name drawio-cable-labler --icon ./icon/icon.iconset/icon.icns window.py
       
       - name: test ${{ matrix.os }}
-        if:  runner.os == "windows"
+        if:  runner.os == 'Windows'
         run: |
           echo "${{ matrix.os }}"
           ls dist

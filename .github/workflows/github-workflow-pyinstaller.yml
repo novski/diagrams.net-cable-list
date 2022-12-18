@@ -50,7 +50,7 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: my-artifact
-          path: dist/drawio-cable-labler-macos
+          path: dist/drawio-cable-labler-macos.zip
 
       # - name: Zipping File - ${{ runner.os }}
       #   if: runner.os == 'macOS'

@@ -38,26 +38,18 @@ jobs:
           pip install -r requirements.txt
 
       - name: Generate Executable 
-        run: pyinstaller --onefile --windowed --name drawio-cable-labler --icon ./icon/icon.iconset/icon.icns window.py
+        run: pyinstaller --onefile --windowed --name drawio-cable-labler --icon icon/icon.iconset/icon.icns window.py
 
       - name: Zipping File - ${{ runner.os }}
         if: runner.os == 'macOS'
         run: |
           cd dist/
           zip -r9 drawio-cable-labler-macos drawio-cable-labler.app/
-      - run: ls dist/
       
       - uses: actions/upload-artifact@v3
         with:
           name: my-artifact
           path: dist/drawio-cable-labler-macos.zip
-
-      # - name: Zipping File - ${{ runner.os }}
-      #   if: runner.os == 'macOS'
-      #   uses: vimtor/action-zip@v1
-      #   with:
-      #     files: dist
-      #     dest: drawio-cable-labler-macOS-app.zip
       
       - name: Release Windows Executable
         if: runner.os == 'Windows' && startsWith(github.ref, 'refs/tags/')

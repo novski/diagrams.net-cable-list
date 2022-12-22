@@ -1,4 +1,5 @@
 import os
+import pathlib
 import wx
 from wx.lib import inspection as insp
 import subprocess
@@ -59,7 +60,7 @@ class MyFrame(wx.Frame):
 
         self._connectControls()
 
-        self.currentDirectory = os.getcwd()
+        self.home_directory = pathlib.Path.home()
 
     def _createControls(self):
         # A Statusbar in the bottom of the window
@@ -176,28 +177,29 @@ class MyFrame(wx.Frame):
         """
         dlg = wx.FileDialog(
             self, message="Choose a file",
-            defaultDir=self.currentDirectory, 
+            defaultDir=os.fspath(self.home_directory), 
             defaultFile="",
             wildcard=wildcard,
             style=wx.FD_OPEN | wx.FD_MULTIPLE | wx.FD_CHANGE_DIR
             )
         if dlg.ShowModal() == wx.ID_OK:
-            paths = dlg.GetPaths()
-            self._txtSourceFile.ChangeValue(paths[0])
-            self.sourceFilePath = paths[0]
+            self.paths = dlg.GetPaths()
+            self._txtSourceFile.ChangeValue(self.paths[0])
+            self.sourceFilePath = self.paths[0]
             if self.output == False:
-                self._txtOutputFile.ChangeValue(paths[0])
-                self.outputPath = os.path.dirname(paths[0])
-                self.filename = os.path.basename(paths[0])
+                self._txtOutputFile.ChangeValue(self.paths[0])
+                self.outputPath = os.path.dirname(self.paths[0])
+                self.filename = os.path.basename(self.paths[0])
         dlg.Destroy()  
       
     def _onOpenFileDestination(self, event):
         """
         Create and show the Open DirectoryDialog
         """
+        print(f'os.fspath(self.home_directory):{os.fspath(self.home_directory)}')
         dlg = wx.DirDialog(
             self, message="Choose a path",
-            defaultPath=self.currentDirectory, 
+            defaultPath=self.paths[0], 
             style=wx.FD_OPEN | wx.FD_MULTIPLE | wx.FD_CHANGE_DIR
             )
         if dlg.ShowModal() == wx.ID_OK:

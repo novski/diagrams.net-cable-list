@@ -19,7 +19,9 @@ def set_new_cable_label(page_elements, cable_list, new_number, page_name):
             if not helpers.none_or_empty(label_position):
                 if label_position == 'source' or label_position == 'target':
                     label_text = helpers.get_value_here_or_in_parent(label_element,"value","label")
+                    label_text = helpers.remove_html_tags(label_text).strip()
                     if not label_text.isdigit() and str(label_text[0:1]) != '0':
+                        print(f'label found:{label_text}')
                         flag_new_label_found = 1
                         new_number_string = create_cable_label(new_number)
                         helpers.set_here_or_in_parent(label_element, new_number_string, 'value', 'label')

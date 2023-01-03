@@ -11,14 +11,25 @@ The GUI can be used by starting the `python window.py` which then invokes on the
 Iterateing over each page it findes all nodes in the xml that have the tag 'source' 
 and (!) 'target' creating python dicts for each cable and its connections or labels.
 While "labels" are text boxes on the cables, connected relationships are often in a group,
-this script tries to identify a parent node by its text assuming that a box (can be a group or a container) description is created in "bold" letters. If it finds one it adds it's text to an dict on the 
+this script tries to identify a parent node by its text assuming that a box (can be a group or a container) 
+description is created in "bold" letters. If it finds one it adds it's text to an dict on the 
 cables dict. If there is no "bold" text found, it looks up the parent 
 cables connected to boxes with "bold" text and adds this instead.
 
 ## How to use:
-1. use virtual env `python3 -m venv <env name>`
-2. install requirements.txt `python -m pip install -r requirements.txt`
-3. execute `python main.py -h` for list of functions
+1. save your drawing as uncompressed file with one of this extensions: 
+  - `*.drawio`
+  - `*.xml`
+2. clone this repo and initialize a virtual environement inside the repository:
+  - `git clone https://github.com/novski/diagrams.net-cable-list.git`
+  - `cd diagrams.net-cable-list`
+  - `python3 -m venv <env name>`
+3. install requirements.txt `python -m pip install -r requirements.txt`
+4. execute `python main.py -h` for list of CLI functions
+5. execute `python window.py` for the Graphical Interface
+
+..or download the installers from the 
+[releases](https://github.com/novski/diagrams.net-cable-list/releases/latest) page.
 
 ```bash
 usage: main.py [-h] [-o OUTPUTPATH] [-n OUTPUTNAME] [-c [CABLESHEET]] [-nr [RENUMBER]] [-log [LOGGLEVEL]] [-loggpath [LOGGPATH]] filepath
@@ -41,7 +52,8 @@ options:
 - Cable Labels are fixed to digits 00000-09999.
 
 ## How to debugg:
-Debug in stdout with  ET.dump(elements) or to a file with toOutputXmlFile(elements) function.
+Debug in stdout with helpers.ET.dump(elements) or to a file with helpers.toOutputXmlFile(elements) function.
 
 ## TODO:
 - [] filter CSV export for !page_header lines
+- [] add and perform testing suite

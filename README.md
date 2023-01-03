@@ -47,9 +47,34 @@ options:
   -loggpath [LOGGPATH]  define if the path where the log should be stored. Default is ./log/
 ```
 
+Test with: `python main.py -nr True -log info -c csv ./tests/drawings/example.drawio`
+The output should look somekind like this:
+```
+python main.py -nr True -log info -c csv ./tests/drawings/example.drawio
+2023-01-03 06:58:49,372 {INFO} main.py:[58]:main() starting..
+2023-01-03 06:58:49,372 {INFO} scraper.py:[16]:scrape() filepath:./tests/drawings/example.drawio
+2023-01-03 06:58:49,372 {INFO} scraper.py:[17]:scrape() starting XML parse...
+2023-01-03 06:58:49,373 {INFO} scraper.py:[21]:scrape() get all cables on all pages...
+2023-01-03 06:58:49,394 {INFO} cables.py:[20]:get_cables_on_pages() page_name:Sheet-1 - amount of cables: 5
+2023-01-03 06:58:49,405 {INFO} cables.py:[20]:get_cables_on_pages() page_name:Sheet-2 - amount of cables: 3
+2023-01-03 06:58:49,412 {INFO} cables.py:[20]:get_cables_on_pages() page_name:Sheet-3 - amount of cables: 2
+2023-01-03 06:58:49,412 {INFO} cables.py:[34]:set_cables_on_pages() set all cable labels on all pages starting with last number:100
+2023-01-03 06:58:49,451 {INFO} cables.py:[50]:set_cables_on_pages() page_name:Sheet-1 - amount of cables: 5
+2023-01-03 06:58:49,472 {INFO} cables.py:[50]:set_cables_on_pages() page_name:Sheet-2 - amount of cables: 3
+2023-01-03 06:58:49,486 {INFO} cables.py:[50]:set_cables_on_pages() page_name:Sheet-3 - amount of cables: 2
+2023-01-03 06:58:49,486 {INFO} export.py:[24]:export() creating drawio...
+2023-01-03 06:58:49,487 {INFO} export.py:[28]:export() creating csv...
+2023-01-03 06:58:49,487 {INFO} scraper.py:[30]:scrape() total amount of cables: 10
+2023-01-03 06:58:49,487 {INFO} main.py:[61]:main() created files: ['./tests/drawings/example-output.drawio', './tests/drawings/example-output.drawio.csv'] in 0.11548658297397196sec.
+```
+And your /tests/drawings/ folder should now be populated with two additional files:
+- `example-output.drawio` that you can open with diagrams.net
+- `example-output.drawio.csv` wich you can import to your spreadsheet programm of choice and use as list of cables.
+
 ## Restrictions:
 - Not connected cables (loose ends) are omitted.
 - Cable Labels are fixed to digits 00000-09999.
+- Cable Numbers are incremented from the highest number found on any page.
 
 ## How to debugg:
 Debug in stdout with helpers.ET.dump(elements) or to a file with helpers.toOutputXmlFile(elements) function.

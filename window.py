@@ -47,7 +47,7 @@ class SingleFileDropTarget(wx.FileDropTarget):
 
 #---------------------------------------------------------------------------
 
-class MyFrame(wx.Frame):
+class MainFrame(wx.Frame):
     def __init__(self):
         self.renumber = False
         self.exportCablelist = False
@@ -57,20 +57,27 @@ class MyFrame(wx.Frame):
         wx.Frame.__init__(self, None, title=wx.GetApp().GetAppName())
 
         self._createControls()
-
         self._connectControls()
 
         self.home_directory = pathlib.Path.home()
 
+
+        menubar = wx.MenuBar()
+        fileMenu = wx.Menu()
+        info = fileMenu.Append(20, 'SubMenu')
+        menubar.Append(fileMenu, 'Info')
+        self.Bind(wx.EVT_MENU, self.info, info)
+        self.SetMenuBar(menubar)
+
+
     def _createControls(self):
+        # Add a panel to the frame (needed under Windows to have a nice background)
+        pnl = wx.Panel(self, wx.ID_ANY)
         # A Statusbar in the bottom of the window
         self.CreateStatusBar(1)
         sMsg = 'Draw.io cable list v.0.0.1'
         self.SetStatusText(sMsg)
-
-        # Add a panel to the frame (needed under Windows to have a nice background)
-        pnl = wx.Panel(self, wx.ID_ANY)
-
+        
         szrMain = wx.BoxSizer(wx.VERTICAL)
         szrMain.AddSpacer(5)
 
@@ -83,7 +90,6 @@ class MyFrame(wx.Frame):
         stbSzr.Add(label, 0, wx.LEFT|wx.RIGHT, 5)
         stbSzr.AddSpacer(5)
         openFileDlgBtn = wx.Button(stBox, label="choose a File")
-        openFileDlgBtn.Bind(wx.EVT_BUTTON, self._onOpenFileSource)
         stbSzr.Add(openFileDlgBtn, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM, 5)
         stbSzr.AddSpacer(5)
         label = wx.StaticText(stBox, wx.ID_STATIC, 'the path of the chosen File is:')
@@ -260,6 +266,18 @@ class MyFrame(wx.Frame):
         else:
             print(f'exec incomplete: {self.exec}')
 
+    def info(self,event):
+        popup_info = InfoFrame(self)
+
+#---------------------------------------------------------------------------
+
+class InfoFrame(wx.Frame):
+    def __init__(self):
+        wx.Frame.__init__(self, None, title="Info")
+        panel = MainFrame(self)
+        self.SetWindowStyle(wx.STAY_ON_TOP)
+        self.Show()
+
 #---------------------------------------------------------------------------
 
 class MyApp(wx.App):
@@ -271,7 +289,7 @@ class MyApp(wx.App):
         self.SetAppName('draw.io cable labeler')
 
         # Create the main window
-        frm = MyFrame()
+        frm = MainFrame()
         self.SetTopWindow(frm)
 
         frm.Show()

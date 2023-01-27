@@ -4,10 +4,7 @@ import wx
 from wx.lib import inspection as insp
 import subprocess
 
-wildcard = "Draw.io source (*.drawio)|*.drawio|" \
-            "XML source (*.xml)|*.xml|" \
-            #"All files (*.*)|*.*"
-
+wildcard =  "Drawings (*.drawio,*.xml)|*.drawio;*.xml" #"All files (*.*) | *.*"
 wxEVT_SINGLEFILE_DROPPED = wx.NewEventType()
 EVT_SINGLEFILE_DROPPED = wx.PyEventBinder(wxEVT_SINGLEFILE_DROPPED, 1)
 
@@ -38,8 +35,8 @@ class SingleFileDropTarget(wx.FileDropTarget):
 
     def OnDropFiles(self, x, y, filenames):
         # As we can only accept one file at a time
-        # We take only the first element of the provided list
-        # And tell the destination handler that a new file has been dropped
+        # we take only the first element of the provided list
+        # and tell the destination handler that a new file has been dropped
         evt = FileDropEvent(wxEVT_SINGLEFILE_DROPPED)
         evt.SetSingleItem(filenames[0])
         self._target.GetEventHandler().AddPendingEvent(evt)
@@ -177,7 +174,7 @@ class MyFrame(wx.Frame):
         """
         dlg = wx.FileDialog(
             self, message="Choose a file",
-            defaultDir=os.fspath(self.home_directory), 
+            defaultDir=str(self.home_directory), 
             defaultFile="",
             wildcard=wildcard,
             style=wx.FD_OPEN | wx.FD_MULTIPLE | wx.FD_CHANGE_DIR
@@ -196,7 +193,6 @@ class MyFrame(wx.Frame):
         """
         Create and show the Open DirectoryDialog
         """
-        print(f'os.fspath(self.home_directory):{os.fspath(self.home_directory)}')
         dlg = wx.DirDialog(
             self, message="Choose a path",
             defaultPath=self.paths[0], 

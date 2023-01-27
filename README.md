@@ -24,6 +24,10 @@ cables connected to boxes with "bold" text and adds this instead.
   - `git clone https://github.com/novski/diagrams.net-cable-list.git`
   - `cd diagrams.net-cable-list`
   - `python3 -m venv <env name>`
+  - activate the venv with 
+    - [lin/mac] `source <env name>/bin/activate` 
+    - [win PS] `<env name>\Scripts\Activate.ps1`
+    - [win cmd] `<env name>\Scripts\Activate.bat`
 3. install requirements.txt `python -m pip install -r requirements.txt`
 4. execute `python main.py -h` for list of CLI functions
 5. execute `python window.py` for the Graphical Interface

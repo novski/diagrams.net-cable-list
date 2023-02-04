@@ -28,8 +28,8 @@ jobs:
       - name: Install Dependencies
         if: runner.os == 'Linux'
         run: |
-          pip install pyinstaller
-          sudo apt-get install libgtk-4-dev
+          sudo apt update
+          sudo apt install libgtk-4-dev
           sudo apt install python3-wxgtk4.0
           pip install pyinstaller
           pip install attrdict

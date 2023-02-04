@@ -1,5 +1,5 @@
 import os
-import pathlib
+from pathlib import Path
 import wx
 from wx.lib import inspection as insp
 import subprocess
@@ -51,13 +51,13 @@ class MainFrame(wx.Frame):
         self.exportCablelist = False
         self.exportCablelistFiletype = 'csv'
         self.output = False
-        insp.InspectionTool().Show()
+        #insp.InspectionTool().Show()
         wx.Frame.__init__(self, None, title=wx.GetApp().GetAppName())
 
         self._createControls()
         self._connectControls()
 
-        self.home_directory = str(pathlib.Path.home())
+        self.home_directory = str(Path.home())
         print(f'self.home_directory:{self.home_directory}')
 
         menubar = wx.MenuBar()
@@ -235,12 +235,14 @@ class MainFrame(wx.Frame):
                 if self.output == True:
                     self.exec = self.exec + ' -o ' + self.outputPath + self.pathSeparator + ' -n ' + self.filename
                 if self.exportCablelist == False & self.renumber == False:
-                    self.exec = self.exec + ' -log INFO ' + self.sourceFilePath
-                    proc = subprocess.Popen(self.exec, 
-                                            shell=True, 
-                                            stdout=subprocess.PIPE, 
-                                            stderr=subprocess.STDOUT,
-                                            text=True) 
+                    print(f'nothing to do. dryrun with only logs will be made, please choose a option...')
+                self.exec = self.exec + ' -log INFO ' + self.sourceFilePath
+                print(f'exec:{self.exec}')
+                proc = subprocess.Popen(self.exec, 
+                                        shell=True, 
+                                        stdout=subprocess.PIPE, 
+                                        stderr=subprocess.STDOUT,
+                                        text=True) 
                 while True:
                     line = proc.stdout.readline()
                     if line.strip() == "":

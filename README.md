@@ -84,6 +84,11 @@ And your /tests/drawings/ folder should now be populated with two additional fil
 ## How to debugg:
 Debug in stdout with helpers.ET.dump(elements) or to a file with helpers.toOutputXmlFile(elements) function.
 
+## How to start github actions to automaticaly build releases
+commit normaly and then add
+`git tag v0.1.x`
+`git push origin v0.1.x`
+
 ## TODO:
 - [] filter CSV export for !page_header lines
 - [] add and perform testing suite

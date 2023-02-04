@@ -1,4 +1,6 @@
 # changelog
-## version 0.1.x
-1. fix overwriten numbers in Lables if styletag is present.
-2. update the changelog to show this messages.
+## version 0.1.1
+1. fix paths for windows
+## version 0.1.2
+1. change dependencies to python 3.9 because wxpython has incompatibilities with 3.10+
+2. fix file choose button binding.

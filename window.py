@@ -4,7 +4,8 @@ import wx
 from wx.lib import inspection as insp
 import subprocess
 
-wildcard =  "Drawings (*.drawio,*.xml)|*.drawio;*.xml" #"All files (*.*) | *.*"
+wildcard =  "Diagrams.net Drawing (*.drawio)|*.drawio|" \
+            "XML Files (*.xml)|*.xml" #"All files (*.*) | *.*"
 wxEVT_SINGLEFILE_DROPPED = wx.NewEventType()
 EVT_SINGLEFILE_DROPPED = wx.PyEventBinder(wxEVT_SINGLEFILE_DROPPED, 1)
 
@@ -50,14 +51,14 @@ class MainFrame(wx.Frame):
         self.exportCablelist = False
         self.exportCablelistFiletype = 'csv'
         self.output = False
-        #insp.InspectionTool().Show()
+        insp.InspectionTool().Show()
         wx.Frame.__init__(self, None, title=wx.GetApp().GetAppName())
 
         self._createControls()
         self._connectControls()
 
-        self.home_directory = pathlib.Path.home()
-
+        self.home_directory = str(pathlib.Path.home())
+        print(f'self.home_directory:{self.home_directory}')
 
         menubar = wx.MenuBar()
         fileMenu = wx.Menu()
@@ -87,6 +88,7 @@ class MainFrame(wx.Frame):
         stbSzr.Add(label, 0, wx.LEFT|wx.RIGHT, 5)
         stbSzr.AddSpacer(5)
         openFileDlgBtn = wx.Button(stBox, label="choose a File")
+        openFileDlgBtn.Bind(wx.EVT_BUTTON, self._onOpenFileSource)
         stbSzr.Add(openFileDlgBtn, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM, 5)
         stbSzr.AddSpacer(5)
         label = wx.StaticText(stBox, wx.ID_STATIC, 'the path of the chosen File is:')
@@ -157,16 +159,13 @@ class MainFrame(wx.Frame):
     def _onCheckedRenumber(self, e): 
         cb = e.GetEventObject()
         self.renumber = cb.GetValue()
-        print(f'renumber: {self.renumber}')
 
     def _onCheckedCablelist(self, e):
         cb = e.GetEventObject()
         self.exportCablelist = cb.GetValue()
-        print(f'export Cablelist {self.exportCablelist}')
 
     def onRadioBox(self,e):
         self.exportCablelistFiletype = self.rbox.GetStringSelection()
-        print(f'{self.rbox.GetStringSelection()} is clicked from filetype')
 
     def _connectControls(self):
         self.Bind(EVT_SINGLEFILE_DROPPED, self._onSourceFileDropped)
@@ -201,7 +200,7 @@ class MainFrame(wx.Frame):
         """
         dlg = wx.DirDialog(
             self, message="Choose a path",
-            defaultPath=self.paths[0], 
+            defaultPath=str(self.home_directory), 
             style=wx.FD_OPEN | wx.FD_MULTIPLE | wx.FD_CHANGE_DIR
             )
         if dlg.ShowModal() == wx.ID_OK:
@@ -221,12 +220,10 @@ class MainFrame(wx.Frame):
         self.outputFilepath = self.outputPath + self.pathSeparator + self.filename
         self._txtOutputFile.ChangeValue(self.outputFilepath)
         self.output = True
-        print(f'filepath: {self.outputFilepath}, filename:{self.filename}')
 
     def _executeCommands(self, event):
         eo = event.GetEventObject()
         if eo.GetLabel() == 'CANCEL':
-            print(f'CANCEL')
             self.Close(True) 
         if eo.GetLabel() == 'OK':
             if self.sourceFilePath:
@@ -238,25 +235,20 @@ class MainFrame(wx.Frame):
                 if self.output == True:
                     self.exec = self.exec + ' -o ' + self.outputPath + self.pathSeparator + ' -n ' + self.filename
                 if self.exportCablelist == False & self.renumber == False:
-                    print(f'nothing to do. dryrun with logs will be made, please choose a option...')
-                self.exec = self.exec + ' -log INFO ' + self.sourceFilePath
-                print(f'exec {self.exec}')
-                proc = subprocess.Popen(self.exec, 
-                                        shell=True, 
-                                        stdout=subprocess.PIPE, 
-                                        stderr=subprocess.STDOUT,
-                                        text=True) 
+                    self.exec = self.exec + ' -log INFO ' + self.sourceFilePath
+                    proc = subprocess.Popen(self.exec, 
+                                            shell=True, 
+                                            stdout=subprocess.PIPE, 
+                                            stderr=subprocess.STDOUT,
+                                            text=True) 
                 while True:
-                    line = proc.stdout.readline()                        
-                    #wx.Yield()
+                    line = proc.stdout.readline()
                     if line.strip() == "":
-                        print('line empty')
                         pass
                     else:
                         self.txtresults.AppendText(line.strip())
                         self.txtresults.AppendText('\n')
-                    if not line: 
-                        print('break')
+                    if not line:
                         break
                 proc.wait()
         else:

@@ -227,7 +227,8 @@ class MainFrame(wx.Frame):
             self.Close(True) 
         if eo.GetLabel() == 'OK':
             if self.sourceFilePath:
-                self.exec = 'python3 main.py'
+                path = str(Path().absolute())
+                self.exec = 'python3 '+ path + os.sep + 'main.py'
                 if self.exportCablelist == True:
                     self.exec =  self.exec + ' -c ' + self.exportCablelistFiletype
                 if self.renumber == True:

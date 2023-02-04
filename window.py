@@ -1,8 +1,9 @@
+import sys
 import os
-from pathlib import Path
 import wx
-from wx.lib import inspection as insp
 import subprocess
+#from wx.lib import inspection as insp
+
 
 wildcard =  "Diagrams.net Drawing (*.drawio)|*.drawio|" \
             "XML Files (*.xml)|*.xml" #"All files (*.*) | *.*"
@@ -57,8 +58,11 @@ class MainFrame(wx.Frame):
         self._createControls()
         self._connectControls()
 
-        self.home_directory = str(Path.home())
-        print(f'self.home_directory:{self.home_directory}')
+        self.home_directory = os.path.expanduser( '~' )
+        try:
+            self.working_directory = sys._MEIPASS
+        except AttributeError:
+            self.working_directory = os.getcwd()
 
         menubar = wx.MenuBar()
         fileMenu = wx.Menu()
@@ -200,14 +204,13 @@ class MainFrame(wx.Frame):
         """
         dlg = wx.DirDialog(
             self, message="Choose a path",
-            defaultPath=str(self.home_directory), 
+            defaultPath=str(self.outputPath), 
             style=wx.FD_OPEN | wx.FD_MULTIPLE | wx.FD_CHANGE_DIR
             )
         if dlg.ShowModal() == wx.ID_OK:
             self.outputPath = dlg.GetPath()
             self.filename = os.path.basename(self.filename)
-            self.pathSeparator = os.path.sep
-            self.outputFilepath = self.outputPath + self.pathSeparator + self.filename
+            self.outputFilepath = self.outputPath + os.path.sep + self.filename
             self._txtOutputFile.ChangeValue(self.outputFilepath)
             self.output = True
         dlg.Destroy()   
@@ -216,8 +219,7 @@ class MainFrame(wx.Frame):
         self.outputFilepath = self._txtOutputFile.GetValue()
         self.outputPath = os.path.dirname(self.outputFilepath)
         self.filename = os.path.basename(self.outputFilepath)
-        self.pathSeparator = os.path.sep
-        self.outputFilepath = self.outputPath + self.pathSeparator + self.filename
+        self.outputFilepath = self.outputPath + os.path.sep + self.filename
         self._txtOutputFile.ChangeValue(self.outputFilepath)
         self.output = True
 
@@ -227,14 +229,13 @@ class MainFrame(wx.Frame):
             self.Close(True) 
         if eo.GetLabel() == 'OK':
             if self.sourceFilePath:
-                path = str(Path().absolute())
-                self.exec = 'python3 '+ path + os.sep + 'main.py'
+                self.exec = 'python3 '+ os.path.join(self.working_directory,'main.py')
                 if self.exportCablelist == True:
                     self.exec =  self.exec + ' -c ' + self.exportCablelistFiletype
                 if self.renumber == True:
                     self.exec = self.exec + ' -nr True'
                 if self.output == True:
-                    self.exec = self.exec + ' -o ' + self.outputPath + self.pathSeparator + ' -n ' + self.filename
+                    self.exec = self.exec + ' -o ' + self.outputPath + os.path.sep + ' -n ' + self.filename
                 if self.exportCablelist == False & self.renumber == False:
                     print(f'nothing to do. dryrun with only logs will be made, please choose a option...')
                 self.exec = self.exec + ' -log INFO ' + self.sourceFilePath

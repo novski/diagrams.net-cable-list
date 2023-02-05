@@ -36,6 +36,9 @@ cables connected to boxes with "bold" text and adds this instead.
 ..or download the installers from the 
 [releases](https://github.com/novski/diagrams.net-cable-list/releases/latest) page.
 
+if you run in to problems it will most likely be on Linux. Read this 
+[source](https://wxpython.org/Phoenix/snapshot-builds/README.txt) to understand why.
+
 ```bash
 usage: main.py [-h] [-o OUTPUTPATH] [-n OUTPUTNAME] [-c [CABLESHEET]] [-nr [RENUMBER]] [-log [LOGGLEVEL]] [-loggpath [LOGGPATH]] filepath
 

@@ -45,7 +45,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Generate Executable 
-        run: pyinstaller --onefile --windowed --name drawio-cable-labler --icon icon/icon.iconset/icon.icns window.py
+        run: pyinstaller drawio-cable-labler.spec
 
       - name: create dmg File - ${{ runner.os }}
         if: runner.os == 'macOS'

@@ -52,7 +52,7 @@ jobs:
           python -m pip install -r ./requirements/post-requirements.txt
 
       - name: Generate Executable 
-        run: pyinstaller ./settings/drawio-cable-labler.spec
+        run: pyinstaller drawio-cable-labler.spec
 
       - name: create dmg File - ${{ runner.os }}
         if: runner.os == 'macOS'

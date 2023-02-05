@@ -31,19 +31,14 @@ jobs:
           sudo apt update
           sudo apt install libgtk-4-dev
           sudo apt install python3-wxgtk4.0
-          pip install pyinstaller
-          pip install attrdict3
-          pip install lxml
-          pip install numpy
-          pip install Pillow
-          pip install six
-          pip install requests
+          pip install -r requirements.txt
+          pip install -r post-requirements.txt
           
       - name: Install Dependencies
         if: runner.os == 'macOS' ||  runner.os == 'Windows'
         run: |
-          pip install pyinstaller
           pip install -r requirements.txt
+          pip install -r post-requirements.txt
 
       - name: Generate Executable 
         run: pyinstaller drawio-cable-labler.spec

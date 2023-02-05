@@ -38,6 +38,7 @@ cables connected to boxes with "bold" text and adds this instead.
 
 if you run in to problems it will most likely be on Linux. Read this 
 [source](https://wxpython.org/Phoenix/snapshot-builds/README.txt) to understand why.
+gh-actions linux build works like [this](https://askubuntu.com/questions/1073145/how-to-install-wxpython-4-ubuntu-18-04) with [weel](https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-22.04/wxPython-4.2.0-cp310-cp310-linux_x86_64.whl).
 
 ```bash
 usage: main.py [-h] [-o OUTPUTPATH] [-n OUTPUTNAME] [-c [CABLESHEET]] [-nr [RENUMBER]] [-log [LOGGLEVEL]] [-loggpath [LOGGPATH]] filepath

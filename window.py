@@ -119,10 +119,11 @@ class MainFrame(wx.Frame):
         self.cb2 = wx.CheckBox(stBox, id=2, label = 'Export Cable list as:',pos = (15,15))
         self.Bind(wx.EVT_CHECKBOX,self._onCheckedCablelist,id=2) 
         stbSzr.Add(self.cb2, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
-        stbSzr.AddSpacer(10)
+        stbSzr.AddSpacer(5)
         lblList = ['csv', 'json']     
-        self.rbox = wx.RadioBox(stBox, pos = (140,40), choices = lblList , majorDimension = 1, style = wx.RA_SPECIFY_ROWS)
+        self.rbox = wx.RadioBox(stBox, pos = (175,40), choices = lblList , majorDimension = 1, style = wx.RA_SPECIFY_ROWS)
         self.rbox.Bind(wx.EVT_RADIOBOX,self.onRadioBox)    
+        stbSzr.AddSpacer(5)
 
         szrMain.Add(stbSzr, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM, 5)
         

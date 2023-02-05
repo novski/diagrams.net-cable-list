@@ -112,19 +112,16 @@ class MainFrame(wx.Frame):
         stbSzr = wx.StaticBoxSizer(wx.VERTICAL, pnl, 'choose option:')
         stBox = stbSzr.GetStaticBox()
         stbSzr.AddSpacer(2)
-        self.cb1 = wx.CheckBox(stBox,id=1,label = 'renumber all cables with "Source" & "Target" Tags',pos = (15,15))
+        self.cb1 = wx.CheckBox(stBox,id=1,label = 'renumber all cables with "Source" and "Target" Tags',pos = (15,15))
         self.Bind(wx.EVT_CHECKBOX,self._onCheckedRenumber,id=1) 
         stbSzr.Add(self.cb1, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         stbSzr.AddSpacer(15)
         self.cb2 = wx.CheckBox(stBox, id=2, label = 'Export Cable list as:',pos = (15,15))
         self.Bind(wx.EVT_CHECKBOX,self._onCheckedCablelist,id=2) 
         stbSzr.Add(self.cb2, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
-        stbSzr.AddSpacer(5)
+        stbSzr.AddSpacer(10)
         lblList = ['csv', 'json']     
-        self.rbox = wx.RadioBox(stBox, 
-                                pos = (180,-5), choices = lblList ,
-                                majorDimension = 1, 
-                                style = wx.RA_SPECIFY_ROWS)
+        self.rbox = wx.RadioBox(stBox, pos = (140,40), choices = lblList , majorDimension = 1, style = wx.RA_SPECIFY_ROWS)
         self.rbox.Bind(wx.EVT_RADIOBOX,self.onRadioBox)    
 
         szrMain.Add(stbSzr, 0, wx.LEFT|wx.RIGHT|wx.BOTTOM, 5)

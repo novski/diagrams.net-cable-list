@@ -2,6 +2,8 @@ import sys
 import os
 import wx
 import subprocess
+from scripts import globallogger
+from argparse import Namespace
 #from wx.lib import inspection as insp
 
 
@@ -58,12 +60,6 @@ class MainFrame(wx.Frame):
         self._createControls()
         self._connectControls()
 
-        self.home_directory = os.path.expanduser( '~' )
-        try:
-            self.working_directory = sys._MEIPASS
-        except AttributeError:
-            self.working_directory = os.getcwd()
-
         menubar = wx.MenuBar()
         fileMenu = wx.Menu()
         info = fileMenu.Append(20, 'SubMenu')
@@ -71,6 +67,15 @@ class MainFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.info, info)
         self.SetMenuBar(menubar)
 
+        # rename variables to match globallogger's argparse Namespace system 
+        args = Namespace(
+                        loggpath = working_directory, 
+                        filepath = home_directory,
+                        logglevel = 'INFO'
+                        )
+        self.logger = globallogger.setup_custom_logger(args, 'scraper')
+        self.logger.info(f'starting logger in window.py ...')
+        self.logger.info(f'Running wxPython {wx.version()} on Python {sys.version}')
 
     def _createControls(self):
         # Add a panel to the frame (needed under Windows to have a nice background)
@@ -183,7 +188,7 @@ class MainFrame(wx.Frame):
         """
         dlg = wx.FileDialog(
             self, message="Choose a file",
-            defaultDir=str(self.home_directory), 
+            defaultDir=str(home_directory), 
             defaultFile="",
             wildcard=wildcard,
             style=wx.FD_OPEN | wx.FD_MULTIPLE | wx.FD_CHANGE_DIR
@@ -228,8 +233,9 @@ class MainFrame(wx.Frame):
         if eo.GetLabel() == 'CANCEL':
             self.Close(True) 
         if eo.GetLabel() == 'OK':
-            if self.sourceFilePath:
-                self.exec = 'python3 ./main.py' #'+ os.path.join(self.working_directory,')
+            try:
+                self.logger.info(f'sourceFilePath:{self.sourceFilePath}')
+                self.exec = 'python3 .'+os.path.sep+'main.py' #'+ os.path.join(self.working_directory,')
                 if self.exportCablelist == True:
                     self.exec =  self.exec + ' -c ' + self.exportCablelistFiletype
                 if self.renumber == True:
@@ -237,9 +243,9 @@ class MainFrame(wx.Frame):
                 if self.output == True:
                     self.exec = self.exec + ' -o ' + self.outputPath + os.path.sep + ' -n ' + self.filename
                 if self.exportCablelist == False & self.renumber == False:
-                    print(f'nothing to do. dryrun with only logs will be made, please choose a option...')
+                    self.logger.info(f'nothing to do. dryrun with only logs will be made, please choose a option...')
                 self.exec = self.exec + ' -log INFO ' + self.sourceFilePath
-                print(f'exec:{self.exec}')
+                self.logger.info(f'starting main routine.. exec:{self.exec}')
                 proc = subprocess.Popen(self.exec, 
                                         shell=True, 
                                         stdout=subprocess.PIPE, 
@@ -254,9 +260,11 @@ class MainFrame(wx.Frame):
                         self.txtresults.AppendText('\n')
                     if not line:
                         break
-                proc.wait()
+                proc.wait()        
+            except AttributeError:
+                self.logger.info(f'please provide a file. You can choose one with the button or drop it to the first line')
         else:
-            print(f'exec incomplete: {self.exec}')
+            self.logger.info(f'exec incomplete: {self.exec}')
 
     def info(self,event):
         popup_info = InfoFrame(self)
@@ -272,17 +280,17 @@ class InfoFrame(wx.Frame):
 
 #---------------------------------------------------------------------------
 
-class MyApp(wx.App):
+class Window(wx.App):
     def OnInit(self):
-        print('Running wxPython ' + wx.version())
+        
         # Set Current directory to the  one containing this file
-        os.chdir(os.path.dirname(os.path.abspath(__file__)))
+        os.chdir(working_directory) # os.path.dirname(os.path.abspath(__file__))
 
         self.SetAppName('draw.io cable labeler')
 
-        # Create the main window
+        # Create the main Frame in Window
         frm = MainFrame()
-        self.SetTopWindow(frm)
+        self.SetTopWindow(frm) # bring the Window to visible front
 
         frm.Show()
         return True
@@ -290,6 +298,19 @@ class MyApp(wx.App):
 #---------------------------------------------------------------------------
 
 if __name__ == '__main__':
-    app = MyApp()
+    # working_directory is initialized in main
+    # because of the different working_directories when
+    # localy executed or installed from pkg or exe.
+    # be aware that the working_directory is not the
+    # same as the home_directory.
+    # ! home is where we open the file choosing window after pressing the button
+    # ! work is where we have the scripts, logs and binaries
+    home_directory = os.path.expanduser( '~' )
+    try:
+        working_directory = sys._MEIPASS
+    except AttributeError:
+        working_directory = os.getcwd()
+
+    app = Window()
     app.MainLoop()
     

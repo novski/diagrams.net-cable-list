@@ -52,10 +52,8 @@ parser.add_argument('-loggpath',
 args = parser.parse_args()
 
 def main(args):
-     # CAUTION: only the main file should create this custom loger. 
-     # The others should retrieve it. logging.getLogger('name')
      logger = globallogger.setup_custom_logger(args, 'scraper')
-     logger.info(f'starting..')
+     logger.info(f'starting xml scraper..')
      t = time.perf_counter()
      outputs = scrape(args)
      logger.info(f'created files: {outputs} in {time.perf_counter()-t}sec.')

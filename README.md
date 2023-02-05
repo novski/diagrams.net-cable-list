@@ -23,14 +23,15 @@ cables connected to boxes with "bold" text and adds this instead.
 2. clone this repo and initialize a virtual environement inside the repository:
   - `git clone https://github.com/novski/diagrams.net-cable-list.git`
   - `cd diagrams.net-cable-list`
-  - `python3.9 -m venv <env name>`
+  - `python3.10 -m venv <env name>`
   - activate the venv with 
     - [lin/mac] `source <env name>/bin/activate` 
     - [win PS] `<env name>\Scripts\Activate.ps1`
     - [win cmd] `<env name>\Scripts\Activate.bat`
 3. install requirements.txt `python -m pip install -r requirements.txt`
-4. execute `python main.py -h` for list of CLI functions
-5. execute `python window.py` for the Graphical Interface
+4. install post requirements.txt `python -m pip install -r post-requirements.txt`
+5. execute `python main.py -h` for list of CLI functions
+6. execute `python window.py` for the Graphical Interface
 
 ..or download the installers from the 
 [releases](https://github.com/novski/diagrams.net-cable-list/releases/latest) page.
@@ -77,8 +78,8 @@ And your /tests/drawings/ folder should now be populated with two additional fil
 
 ## Restrictions:
 - Not connected cables (loose ends) are omitted.
-- Cable Labels are fixed to digits 00000-09999.
-- Cable Numbers are incremented from the highest number found on any page.
+- Cable Labels are fixed to only digits 00000-09999.
+- Cable Numbers are incremented upwards from the highest number found on any page.
 - wxpython has certain problems with python 3.10+
 
 ## How to debugg:

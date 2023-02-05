@@ -7,3 +7,6 @@
 ### version 0.1.10
 1. fix filepath not recognized
 2. fix working directory not recognized
+### version 0.1.12
+1. fix windows local build requirements
+2. fix radiobutton alinement

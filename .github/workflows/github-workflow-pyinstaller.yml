@@ -40,6 +40,7 @@ jobs:
       - name: Install Dependencies
         if: runner.os == 'macOS'
         run: |
+          pip install lxml
           pip install -r ./requirements/macreq.txt
           pip install -r ./requirements/requirements.txt
           pip install -r ./requirements/post-requirements.txt

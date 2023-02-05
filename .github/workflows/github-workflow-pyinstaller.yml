@@ -33,15 +33,15 @@ jobs:
           sudo apt install libgtk-4-dev
           sudo apt install python3-wxgtk4.0
           wget https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-22.04/wxPython-4.2.0-cp310-cp310-linux_x86_64.whl
-          pip install wxPython-4.2.0-cp310-cp310-linux_x86_64.whl
-          pip install -r requirements.txt
-          pip install -r post-requirements.txt
+          python -m pip install wxPython-4.2.0-cp310-cp310-linux_x86_64.whl
+          python -m pip install -r requirements.txt
+          python -m pip install -r post-requirements.txt
           
       - name: Install Dependencies
         if: runner.os == 'macOS' ||  runner.os == 'Windows'
         run: |
-          pip install -r requirements.txt
-          pip install -r post-requirements.txt
+          python -m pip install -r requirements.txt
+          python -m pip install -r post-requirements.txt
 
       - name: Generate Executable 
         run: pyinstaller drawio-cable-labler.spec
@@ -49,7 +49,7 @@ jobs:
       - name: create dmg File - ${{ runner.os }}
         if: runner.os == 'macOS'
         run: |
-          pip install dmgbuild
+          python -m pip install dmgbuild
           dmgbuild -s settings.py -D app=dist/drawio-cable-labler.app "drawio-cable-labler" drawio-cable-labler.dmg
       
       - name: Release Windows Executable

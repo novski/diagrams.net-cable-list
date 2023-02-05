@@ -10,7 +10,7 @@ added_files = [
 ]
 
 a = Analysis(
-    ['window.py'],
+    ['../window.py'],
     pathex=[],
     binaries=[],
     datas=added_files,

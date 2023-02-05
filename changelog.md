@@ -10,3 +10,5 @@
 ### version 0.1.12
 1. fix windows local build requirements
 2. fix radiobutton alinement
+### version 0.1.21
+1. fix long running linux builds with weel fetch

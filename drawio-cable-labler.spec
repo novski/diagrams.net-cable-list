@@ -11,7 +11,7 @@ added_files = [
 
 a = Analysis(
     ['window.py'],
-    pathex=['../window.py'],
+    pathex=[],
     binaries=[],
     datas=added_files,
     hiddenimports=['lxml'],

@@ -305,7 +305,7 @@ class MenuCallback(wx.Frame):
     def __init__(self, *args, **kwds):
         wx.Frame.__init__(self, *args, **kwds)
         self.menubar = wx.MenuBar()
-        self.wildcard = ("Log's (*.log)|*.log|")
+        self.wildcard = ("Log's (*.log)|*.log")
         menu = wx.Menu()
         menu_item_1 = menu.Append(101, "&Info")
         menu_item_2 = menu.Append(102, "&Log's")
@@ -313,6 +313,7 @@ class MenuCallback(wx.Frame):
 
         self.menubar.Append(menu, "&File")
         self.SetMenuBar(self.menubar)
+        self.Show(True)
     
         self.Bind(wx.EVT_MENU, self.Info, id=101)
         self.Bind(wx.EVT_MENU, self.Log, id=102)
@@ -365,7 +366,7 @@ class Window(wx.App):
         # Create the main Frame in Window
         frm = MainFrame()
         self.SetTopWindow(frm)  # bring the Window to visible front
-        MC=MenuCallback(parent=None, id=-1)
+        MC=MenuCallback(parent=frm, id=-1)
         frm.Show()
         return True
 

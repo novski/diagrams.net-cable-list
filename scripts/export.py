@@ -1,29 +1,30 @@
 import logging
+from pathlib import Path
 from lxml import etree as ET
 import csv, json
 from scripts import helpers
 
 
+
 logger = logging.getLogger('scraper')
 
 def export(args, root, cables_list, list_of_page_elements):
-
     # if the argparse -o value is set use that filename as output else add output to the filename
     # in both cases use the path and save the file where it comes from.
-    path_index = args.filepath.rfind('/')
-    path = args.outputpath if args.outputpath else args.filepath[:path_index+1] 
-    if args.outputname:
-        filename = args.outputname + '-output.drawio'
-    else:
-        full_filename = args.filepath[path_index+1:]
-        extension_index = full_filename.rfind('.')
-        filename = full_filename[:extension_index] + '-output.drawio'
-    output_filepath = path + filename
+    if args.outputpath == None:
+        args.outputpath = Path(args.filepath).parent
+    if args.outputname == None:
+        args.outputname = Path(args.filepath).stem + '-output'
+    output_filepath = Path.joinpath(args.outputpath,args.outputname)
     output_filepaths = []
+
     if eval(args.renumber):
         logger.info('creating drawio...')
         output_drawio = create_drawio(output_filepath,root)
         output_filepaths.append(output_drawio)
+    else :
+        logger.info('Renumbering is not set. NO changes to the drawing where done.')
+
     if args.cablesheet == 'csv':
         logger.info('creating csv...')
         output_csv = create_csv(output_filepath, cables_list)
@@ -34,16 +35,18 @@ def export(args, root, cables_list, list_of_page_elements):
             page_name = page_elements.get('name')
             output_json = create_json(output_filepath, cables_list,page_name)
         output_filepaths.append(output_json)
+    else:
+        logger.info('No cablesheet export wished.')
     return output_filepaths
 
 def create_drawio(output_filepath, root):
-    output = output_filepath 
+    output = Path.with_suffix(output_filepath, '.drawio')
     tree = ET.ElementTree(root)
     tree.write(output, pretty_print=True, xml_declaration=True, encoding="utf-8")
     return output
 
 def create_csv(output_filepath,cables_list):
-    output = output_filepath + '.csv'
+    output = Path.with_suffix(output_filepath, '.csv')
     title = [
         'Page', 
         'Source Tag', 

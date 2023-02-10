@@ -78,7 +78,7 @@ python main.py -nr True -log info -c csv ./tests/drawings/example.drawio
 ```
 And your /tests/drawings/ folder should now be populated with two additional files:
 - `example-output.drawio` that you can open with diagrams.net
-- `example-output.drawio.csv` wich you can import to your spreadsheet programm of choice and use as list of cables.
+- `example-output.csv` wich you can import to your spreadsheet programm of choice and use as list of cables.
 
 ## Restrictions:
 - Not connected cables (loose ends) are omitted.

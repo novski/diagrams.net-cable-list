@@ -5,12 +5,13 @@ from pathlib import Path
 import logging.handlers
 
 
-
 def setup_custom_logger(args, name):
-    formatter = logging.Formatter('%(asctime)s {%(levelname)s} %(filename)s:[%(lineno)s]:%(funcName)s() %(message)s')
+    formatter = logging.Formatter(
+        "%(asctime)s {%(levelname)s} %(filename)s:[%(lineno)s]:%(funcName)s() %(message)s"
+    )
 
     logger = logging.getLogger(name)
-    if (logger.hasHandlers()):
+    if logger.hasHandlers():
         return logger
     logger.propagate = False
     logger.setLevel(logging.DEBUG)
@@ -23,9 +24,8 @@ def setup_custom_logger(args, name):
         pass
 
     dt = datetime.now()
-    dtms = f"{dt.strftime('%y%m%d_%H%M%S')}{str(dt.microsecond/1000)[:-4]}"
-    logfile = str(Path(args.loggpath)) + os.path.sep + dtms +'-'+ str(Path(args.filepath).stem) +'.log'
-    print(f'globallogger logfilepath:{logfile}')
+    dtms = f"{dt.strftime('%y%m%d_%H%M%S_')}{str(dt.microsecond/1000)[:-4]}"
+    logfile = str(Path(args.loggpath)) + os.path.sep + dtms + ".log"
 
     if os.path.exists(logfile):
         os.remove(logfile)
@@ -40,5 +40,4 @@ def setup_custom_logger(args, name):
 
     logger.addHandler(filehandler)
     logger.addHandler(consolehandler)
-
     return logger

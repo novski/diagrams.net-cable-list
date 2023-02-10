@@ -14,7 +14,6 @@ def scrape(args):
     """
 
     logger.info(f'filepath:{args.filepath}')
-    logger.info('starting XML parse...')
     root = ET.parse(args.filepath).getroot()
     list_of_page_elements = root.findall("diagram")
     # start of parseing

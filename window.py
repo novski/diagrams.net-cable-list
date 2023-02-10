@@ -1,5 +1,7 @@
 import sys
 import os
+import platform
+import subprocess
 from pathlib import Path
 import wx
 import logging
@@ -10,9 +12,6 @@ from argparse import Namespace
 # from wx.lib import inspection as insp
 
 
-wildcard = (
-    "Diagrams.net Drawing (*.drawio)|*.drawio|" "XML Files (*.xml)|*.xml"
-)  # "All files (*.*) | *.*"
 wxEVT_SINGLEFILE_DROPPED = wx.NewEventType()
 EVT_SINGLEFILE_DROPPED = wx.PyEventBinder(wxEVT_SINGLEFILE_DROPPED, 1)
 
@@ -78,25 +77,19 @@ class MainFrame(wx.Frame):
         self.output = False
         self.outputname = False
         self.txtresults = ""
+        self.wildcard = ("Diagrams.net Drawing (*.drawio)|*.drawio|" "XML Files (*.xml)|*.xml")
         # insp.InspectionTool().Show()
         wx.Frame.__init__(self, None, title=wx.GetApp().GetAppName())
 
         self._createControls()
         self._connectControls()
 
-        menubar = wx.MenuBar()
-        fileMenu = wx.Menu()
-        info = fileMenu.Append(20, "SubMenu")
-        menubar.Append(fileMenu, "Info")
-        self.Bind(wx.EVT_MENU, self.info, info)
-        self.SetMenuBar(menubar)
-
     def _createControls(self):
         # Add a panel to the frame (needed under Windows to have a nice background)
         pnl = wx.Panel(self, wx.ID_ANY)
         # A Statusbar in the bottom of the window
         self.CreateStatusBar(1)
-        sMsg = "Draw.io cable list v.0.0.1"
+        sMsg = "Draw.io cable list v.0.2.1"
         self.SetStatusText(sMsg)
 
         szrMain = wx.BoxSizer(wx.VERTICAL)
@@ -242,7 +235,7 @@ class MainFrame(wx.Frame):
             message="Choose a file",
             defaultDir=str(home_directory),
             defaultFile="",
-            wildcard=wildcard,
+            wildcard=self.wildcard,
             style=wx.FD_OPEN | wx.FD_MULTIPLE | wx.FD_CHANGE_DIR,
         )
         if dlg.ShowModal() == wx.ID_OK:
@@ -305,21 +298,59 @@ class MainFrame(wx.Frame):
                             or drop it to the line"
                 )
 
-    def info(self, event):
-        popup_info = InfoFrame(self)
-
-
 # ---------------------------------------------------------------------------
 
+class MenuCallback(wx.Frame):
 
-class InfoFrame(wx.Frame):
-    def __init__(self):
-        wx.Frame.__init__(self, None, title="Info")
-        panel = MainFrame(self)
-        self.SetWindowStyle(wx.STAY_ON_TOP)
-        self.Show()
+    def __init__(self, *args, **kwds):
+        wx.Frame.__init__(self, *args, **kwds)
+        self.menubar = wx.MenuBar()
+        self.wildcard = ("Log's (*.log)|*.log|")
+        menu = wx.Menu()
+        menu_item_1 = menu.Append(101, "&Info")
+        menu_item_2 = menu.Append(102, "&Log's")
+        menu_item_3 = menu.Append(wx.ID_EXIT, "&Exit...")
 
+        self.menubar.Append(menu, "&File")
+        self.SetMenuBar(self.menubar)
+    
+        self.Bind(wx.EVT_MENU, self.Info, id=101)
+        self.Bind(wx.EVT_MENU, self.Log, id=102)
+        self.Bind(wx.EVT_MENU, self.OnClose, id=wx.ID_EXIT)
 
+    def Info(self, event):
+        id_selected = event.GetId()
+        logger.info('Info panel will follow in future version.')
+
+    def Log(self, event):
+        """
+        Create and show the Open DirectoryDialog
+        """
+        #if event.GetId() == 103:
+        dlg = wx.FileDialog(
+            self,
+            message="Choose a Logfile",
+            wildcard=self.wildcard,
+            defaultDir= working_directory + os.pathsep + 'log',
+            style=wx.FD_OPEN | wx.FD_MULTIPLE | wx.FD_CHANGE_DIR,
+        )
+        if dlg.ShowModal() == wx.ID_OK:
+            self.logfile = dlg.GetPaths()[0]
+            print(f'logfile:{self.logfile}')
+            if platform.system() == 'Darwin':       # macOS
+                subprocess.call(('open', self.logfile))
+            elif platform.system() == 'Windows':    # Windows
+                os.startfile(self.logfile)
+            else:                                   # linux variants
+                subprocess.call(('xdg-open', self.logfile))
+        dlg.Destroy()
+
+    def OnThingEnd(self, event):
+        id_selected = event.GetId()
+        print("Option =", id_selected)
+
+    def OnClose(self, event):
+        self.Close()
 # ---------------------------------------------------------------------------
 
 
@@ -334,7 +365,7 @@ class Window(wx.App):
         # Create the main Frame in Window
         frm = MainFrame()
         self.SetTopWindow(frm)  # bring the Window to visible front
-
+        MC=MenuCallback(parent=None, id=-1)
         frm.Show()
         return True
 

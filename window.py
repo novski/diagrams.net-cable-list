@@ -333,7 +333,7 @@ class MainFrame(wx.Frame):
         dlg = wx.FileDialog(
             self,
             message="Choose a Logfile",
-            wildcard="Log's (*.log)|*.log|",
+            wildcard="Log's (*.log)|*.log",
             defaultDir=working_directory + os.pathsep + "log",
             style=wx.FD_OPEN | wx.FD_MULTIPLE | wx.FD_CHANGE_DIR,
         )

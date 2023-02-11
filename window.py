@@ -27,9 +27,7 @@ class CustomHandler(logging.Handler):
     def clear(self):
         self.target.Clear()
 
-
 # ---------------------------------------------------------------------------
-
 
 class FileDropEvent(wx.PyCommandEvent):
     def __init__(self, evtType):
@@ -47,9 +45,7 @@ class FileDropEvent(wx.PyCommandEvent):
     def AddItem(self, item):
         self._items.append(item)
 
-
 # ---------------------------------------------------------------------------
-
 
 class SingleFileDropTarget(wx.FileDropTarget):
     def __init__(self, dstHandler):
@@ -65,9 +61,7 @@ class SingleFileDropTarget(wx.FileDropTarget):
         self._target.GetEventHandler().AddPendingEvent(evt)
         return True
 
-
 # ---------------------------------------------------------------------------
-
 
 class MainFrame(wx.Frame):
     def __init__(self):
@@ -77,12 +71,24 @@ class MainFrame(wx.Frame):
         self.output = False
         self.outputname = False
         self.txtresults = ""
-        self.wildcard = ("Diagrams.net Drawing (*.drawio)|*.drawio|" "XML Files (*.xml)|*.xml")
+
         # insp.InspectionTool().Show()
         wx.Frame.__init__(self, None, title=wx.GetApp().GetAppName())
-
         self._createControls()
         self._connectControls()
+
+        self.menubar = wx.MenuBar()
+        menu = wx.Menu()
+        menu_item_1 = menu.Append(101, "&Info")
+        menu_item_2 = menu.Append(102, "&Log's")
+        menu_item_3 = menu.Append(wx.ID_EXIT, "&Exit...")
+
+        self.menubar.Append(menu, "&File")
+        self.SetMenuBar(self.menubar)
+
+        self.Bind(wx.EVT_MENU, self.Info, id=101)
+        self.Bind(wx.EVT_MENU, self.Log, id=102)
+        self.Bind(wx.EVT_MENU, self.OnClose, id=wx.ID_EXIT)
 
     def _createControls(self):
         # Add a panel to the frame (needed under Windows to have a nice background)
@@ -168,9 +174,10 @@ class MainFrame(wx.Frame):
         )
         stbSzr.AddSpacer(2)
         label = wx.StaticText(
-            stBox, wx.ID_STATIC, 
-            "If you like to change the Path or the Filename, " \
-            + "type it without sufix (.xy) in the line above and press Enter to apply."
+            stBox,
+            wx.ID_STATIC,
+            "If you like to change the Path or the Filename, "
+            + "type it without sufix (.xy) in the line above and press Enter to apply.",
         )
         stbSzr.Add(label, 0, wx.LEFT | wx.RIGHT, 5)
         stbSzr.AddSpacer(10)
@@ -201,13 +208,17 @@ class MainFrame(wx.Frame):
             border=5,
         )
 
-        logger.setLevel(logging.INFO)
-        logger.addHandler(CustomHandler(self.txtresults))
+        l = CustomHandler(self.txtresults)
+        l.setLevel('INFO')
+        logger.addHandler(l)
 
         szrMain.AddSpacer(10)
 
         pnl.SetSizer(szrMain)
         szrMain.SetSizeHints(self)
+
+    def _connectControls(self):
+        self.Bind(EVT_SINGLEFILE_DROPPED, self._onSourceFileDropped)
 
     def _onCheckedRenumber(self, e):
         cb = e.GetEventObject()
@@ -219,9 +230,6 @@ class MainFrame(wx.Frame):
 
     def onRadioBox(self, e):
         self.exportCablelistFiletype = self.rbox.GetStringSelection()
-
-    def _connectControls(self):
-        self.Bind(EVT_SINGLEFILE_DROPPED, self._onSourceFileDropped)
 
     def _onSourceFileDropped(self, evt):
         self._txtSourceFile.ChangeValue(evt.GetSingleItem())
@@ -235,7 +243,7 @@ class MainFrame(wx.Frame):
             message="Choose a file",
             defaultDir=str(home_directory),
             defaultFile="",
-            wildcard=self.wildcard,
+            wildcard="Diagrams.net Drawing (*.drawio)|*.drawio|" "XML Files (*.xml)|*.xml",
             style=wx.FD_OPEN | wx.FD_MULTIPLE | wx.FD_CHANGE_DIR,
         )
         if dlg.ShowModal() == wx.ID_OK:
@@ -245,9 +253,15 @@ class MainFrame(wx.Frame):
             if self.output == False:
                 self.outputPath = os.path.dirname(self.paths[0])
                 self.filename = os.path.basename(self.paths[0])
-                self.file_sufix_list = os.path.splitext(self.outputPath + os.path.sep + self.filename)
-                self.outputFilepath = self.outputPath + os.path.sep + self.file_sufix_list[0]
-                self._txtOutputFile.ChangeValue(self.file_sufix_list[0] + '-output' + self.file_sufix_list[1])
+                self.file_sufix_list = os.path.splitext(
+                    self.outputPath + os.path.sep + self.filename
+                )
+                self.outputFilepath = (
+                    self.outputPath + os.path.sep + self.file_sufix_list[0]
+                )
+                self._txtOutputFile.ChangeValue(
+                    self.file_sufix_list[0] + "-output" + self.file_sufix_list[1]
+                )
         dlg.Destroy()
 
     def _onOpenFileDestination(self, event):
@@ -263,9 +277,13 @@ class MainFrame(wx.Frame):
         if dlg.ShowModal() == wx.ID_OK:
             self.outputPath = dlg.GetPath()
             self.filename = os.path.basename(self.filename)
-            self.file_sufix_list = os.path.splitext(self.outputPath + os.path.sep + self.filename)
+            self.file_sufix_list = os.path.splitext(
+                self.outputPath + os.path.sep + self.filename
+            )
             self.outputFilepath = self.file_sufix_list[0]
-            self._txtOutputFile.ChangeValue(self.file_sufix_list[0] + '-output' + self.file_sufix_list[1])
+            self._txtOutputFile.ChangeValue(
+                self.file_sufix_list[0] + "-output" + self.file_sufix_list[1]
+            )
             self.output = True
         dlg.Destroy()
 
@@ -283,77 +301,57 @@ class MainFrame(wx.Frame):
             self.Close(True)
         if eo.GetLabel() == "OK":
             try:
-                logger.info('starting main routine..')
+                logger.info("starting main routine..")
                 args = Namespace(
                     filepath=self.sourceFilePath,
-                    cablesheet=self.exportCablelistFiletype if self.exportCablelist == True else None,
+                    cablesheet=self.exportCablelistFiletype
+                    if self.exportCablelist == True
+                    else None,
                     renumber=str(self.renumber),
-                    outputpath=Path(self.outputFilepath).parent if self.output == True else None,
+                    outputpath=Path(self.outputFilepath).parent
+                    if self.output == True
+                    else None,
                     outputname=self.filename if self.outputname == True else None,
                 )
                 main(args)
             except AttributeError as a:
-                logger.info(f"error:{a} -> please provide a file. \
-                            You can choose one with the button \
-                            or drop it to the line"
+                logger.info(
+                    f"error:{a} -> please provide a file. "\
+                    + " You can choose one with the button" \
+                    + " or drop it to the line"
                 )
-
-# ---------------------------------------------------------------------------
-
-class MenuCallback(wx.Frame):
-
-    def __init__(self, *args, **kwds):
-        wx.Frame.__init__(self, *args, **kwds)
-        self.menubar = wx.MenuBar()
-        self.wildcard = ("Log's (*.log)|*.log")
-        menu = wx.Menu()
-        menu_item_1 = menu.Append(101, "&Info")
-        menu_item_2 = menu.Append(102, "&Log's")
-        menu_item_3 = menu.Append(wx.ID_EXIT, "&Exit...")
-
-        self.menubar.Append(menu, "&File")
-        self.SetMenuBar(self.menubar)
-        self.Show(True)
-    
-        self.Bind(wx.EVT_MENU, self.Info, id=101)
-        self.Bind(wx.EVT_MENU, self.Log, id=102)
-        self.Bind(wx.EVT_MENU, self.OnClose, id=wx.ID_EXIT)
 
     def Info(self, event):
         id_selected = event.GetId()
-        logger.info('Info panel will follow in future version.')
+        logger.info("Info panel will follow in future version.")
 
     def Log(self, event):
         """
         Create and show the Open DirectoryDialog
         """
-        #if event.GetId() == 103:
+        # if event.GetId() == 103:
         dlg = wx.FileDialog(
             self,
             message="Choose a Logfile",
-            wildcard=self.wildcard,
-            defaultDir= working_directory + os.pathsep + 'log',
+            wildcard="Log's (*.log)|*.log|",
+            defaultDir=working_directory + os.pathsep + "log",
             style=wx.FD_OPEN | wx.FD_MULTIPLE | wx.FD_CHANGE_DIR,
         )
         if dlg.ShowModal() == wx.ID_OK:
             self.logfile = dlg.GetPaths()[0]
-            print(f'logfile:{self.logfile}')
-            if platform.system() == 'Darwin':       # macOS
-                subprocess.call(('open', self.logfile))
-            elif platform.system() == 'Windows':    # Windows
+            print(f"logfile:{self.logfile}")
+            if platform.system() == "Darwin":  # macOS
+                subprocess.call(("open", self.logfile))
+            elif platform.system() == "Windows":  # Windows
                 os.startfile(self.logfile)
-            else:                                   # linux variants
-                subprocess.call(('xdg-open', self.logfile))
+            else:  # linux variants
+                subprocess.call(("xdg-open", self.logfile))
         dlg.Destroy()
-
-    def OnThingEnd(self, event):
-        id_selected = event.GetId()
-        print("Option =", id_selected)
 
     def OnClose(self, event):
         self.Close()
-# ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
 
 class Window(wx.App):
     def OnInit(self):
@@ -366,7 +364,7 @@ class Window(wx.App):
         # Create the main Frame in Window
         frm = MainFrame()
         self.SetTopWindow(frm)  # bring the Window to visible front
-        MC=MenuCallback(parent=frm, id=-1)
+
         frm.Show()
         return True
 

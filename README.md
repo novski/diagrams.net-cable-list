@@ -95,5 +95,10 @@ commit normaly and then add
 `git push origin v0.1.x`
 
 ## TODO:
+- [] change dist output name for linux build to include dist info 'Debian x86'
+- [] add Devicelist export
+- [] add information panel in menu
+- [] create test file import in menu
+- [] remove old logfiles in ./log folder
 - [] filter CSV export for !page_header lines
 - [] add and perform testing suite

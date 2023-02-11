@@ -14,7 +14,7 @@ def setup_custom_logger(args, name):
     if logger.hasHandlers():
         return logger
     logger.propagate = False
-    logger.setLevel(logging.FATAL)
+    logger.setLevel(logging.DEBUG)
 
     # checking if the directory for logging exist or not.
     if not os.path.exists(args.loggpath):

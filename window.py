@@ -209,7 +209,7 @@ class MainFrame(wx.Frame):
         )
 
         l = CustomHandler(self.txtresults)
-        l.setLevel(logging.INFO)
+        l.setLevel('INFO')
         logger.addHandler(l)
 
         szrMain.AddSpacer(10)

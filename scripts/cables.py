@@ -93,7 +93,6 @@ def get_cable_list(page_elements, page_name):
                                 'parent_id':parent_id
                                 })
             cable_list.append(cable_dict)
-    helpers.debugJsonFile(cable_list)
     logger.debug('device_list: !!!TODO!!!')   
     for device in device_list:
         logger.debug(f'(device_list){device}')

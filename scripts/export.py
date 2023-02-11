@@ -111,7 +111,7 @@ def create_csv(output_filepath,cables_list):
     return output    
 
 def create_json(output_filepath,cables_list,page_name):
-    output = output_filepath + '.json'
+    output = Path.with_suffix(output_filepath, '.json')
     with open(output, 'w') as f:
-        f.write(json.dumps(cables_list, indent=2))
+        json.dump(cables_list, f, indent=2)
     return output

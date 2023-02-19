@@ -81,6 +81,7 @@ And your /tests/drawings/ folder should now be populated with two additional fil
 - `example-output.csv` wich you can import to your spreadsheet programm of choice and use as list of cables.
 
 ## Restrictions:
+- window hangs on long tasks (big files) and needs looooong to solve the task. -> read Apendix A
 - Not connected cables (loose ends) are omitted.
 - Cable Labels are fixed to only digits 00000-09999.
 - Cable Numbers are incremented upwards from the highest number found on any page.
@@ -102,3 +103,9 @@ commit normaly and then add
 - [] remove old logfiles in ./log folder
 - [] filter CSV export for !page_header lines
 - [] add and perform testing suite
+
+# APENDIX
+A: Trying to implement threads to dispatch tasks from gui leads to segmentation faults 
+due to the usage of logging. The recomended way to solve that is to use a wx.PubSub implementation and 
+let the cli app communicate with the gui through that instead of logging to the logger txtbox. This
+seams to be another big task and i don't have time right now to solve it. PR are welcome. :-)

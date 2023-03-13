@@ -1,7 +1,7 @@
 from lxml import etree as ET
 import re
 import logging
-from scripts import labels, helpers
+from scripts import elements, labels, helpers
 
 
 logger = logging.getLogger('scraper')
@@ -80,6 +80,7 @@ def get_cable_list(page_elements, page_name):
         if not helpers.none_or_empty(source_dict):
             cable_dict.update(source_dict)
         else: logger.debug(f'source_dict of cable_id:{cable_id} was empty')
+        print(f'target_id:{target_id}, cable_id:{cable_id}')
         target_dict = get_connection_text(page_elements, target_id,'target')
         if not helpers.none_or_empty(target_dict):
             cable_dict.update(target_dict)
@@ -103,14 +104,19 @@ def get_cable_elements(page_elements):
     Search for all source and target tags. 
     This leads to incomplete elements where the id is cut off. To reach the id of 
     the seldom <object> elements we have to get the parent of <mxCell>.
-    This (to reach the parent) is also why we need lxml and no the python standard xml library.
+    This (to reach the parent) is also why we need lxml and not the python standard xml library.
     """
     list_of_cable_elements = []
-    list_of_cables_incomplete = page_elements.findall( ".//*[@source][@target]")
-    for mxCell in list_of_cables_incomplete:
+    list_of_type_elements = []
+    list_of_types_incomplete = page_elements.findall( ".//*[@type]")
+    for mxCell in list_of_types_incomplete:
         mxCell_id = helpers.get_value_here_or_in_parent(mxCell,'id')
         if not helpers.none_or_empty(mxCell_id):
-            list_of_cable_elements += page_elements.findall('.//*[@id="'+mxCell_id+'"]')
+            list_of_type_elements += page_elements.findall('.//*[@id="'+mxCell_id+'"]')
+    for element in list_of_type_elements:
+        type = helpers.get_value_here_or_in_parent(element,"type").strip()
+        if type == 'cable':
+            list_of_cable_elements.append(element)
     return list_of_cable_elements
 
 def get_last_number(cables_list):
@@ -136,8 +142,8 @@ def get_connection_text(elements, text_id, prefix):
     parents_text_list = []
     group_ids =[]
     text_dict = {}
-
-    text_dict.update(get_text(text_element))
+    if text_element is not None:
+        text_dict.update(get_text(text_element))
     if not text_dict: return
     elif helpers.none_or_empty(text_dict.get('text')): return
     elif text_dict.get('text_bold'): return

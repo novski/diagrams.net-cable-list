@@ -1,6 +1,6 @@
 import logging
 from lxml import etree as ET
-from scripts import cables, export
+from scripts import elements, cables, export
 
 
 logger = logging.getLogger('scraper')

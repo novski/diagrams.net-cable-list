@@ -1,23 +1,28 @@
 # diagrams.net-cable-list
 
-
 ## What it does:
 Find all Cables in an diagrams.net (former draw.io) drawing and create a cable list.
 
 ## How it works:
-This piece of software contains two user-levels. 
+This piece of software contains two entry points. 
 The CLI can be executed directly with `python main.py`.
 The GUI can be used by starting the `python window.py` which then invokes on the CLI part in a more user frendly way. 
-Iterateing over each page it findes all nodes in the xml that have the tag 'source' 
-and (!) 'target' creating python dicts for each cable and its connections or labels.
-While "labels" are text boxes on the cables, connected relationships are often in a group,
+Iterateing over each page it findes all nodes in the xml that have the tag `type`. 
+It then creates python dicts for each `type:cable` and it's connected labels.
+While "labels" are text boxes ON the cables, connected relationships are often in a group or container,
 this script tries to identify a parent node by its text assuming that a box (can be a group or a container) 
-description is created in "bold" letters. If it finds one it adds it's text to an dict on the 
+description is created in "bold" letters. If it finds one it adds it's text to the 
 cables dict. If there is no "bold" text found, it looks up the parent 
 cables connected to boxes with "bold" text and adds this instead.
 
-## How to use:
-1. save your drawing as uncompressed file with one of this extensions: 
+## How to use
+
+### Installation
+Download the installers from the 
+[releases](https://github.com/novski/diagrams.net-cable-list/releases/latest) page.
+
+or try the manual way:
+1. save your drawing as uncompressed file (see Menu) with one of this extensions: 
   - `*.drawio`
   - `*.xml`
 2. clone this repo and initialize a virtual environement inside the repository:
@@ -32,9 +37,6 @@ cables connected to boxes with "bold" text and adds this instead.
 4. install post requirements.txt `python -m pip install -r post-requirements.txt`
 5. execute `python main.py -h` for list of CLI functions
 6. execute `python window.py` for the Graphical Interface
-
-..or download the installers from the 
-[releases](https://github.com/novski/diagrams.net-cable-list/releases/latest) page.
 
 if you run in to problems it will most likely be on Linux. Read this 
 [source](https://wxpython.org/Phoenix/snapshot-builds/README.txt) to understand why.
@@ -79,6 +81,14 @@ python main.py -nr True -log info -c csv ./tests/drawings/example.drawio
 And your /tests/drawings/ folder should now be populated with two additional files:
 - `example-output.drawio` that you can open with diagrams.net
 - `example-output.csv` wich you can import to your spreadsheet programm of choice and use as list of cables.
+
+### how to draw
+- Create a drawing that has uncompressed filesize, for that look in to the menu to uncheck the commpressed save.
+- Add two lines or connections and add in the style the datafield `type` with value `cable`. 
+  If you have multiple cables the datafield can be copied and pasted to many at once. 
+- do the same for `type:device` to get a list of devices (by now it's a future feeture)
+- add a source and target label ON the cable (it needs the relationship to the cable) to get 
+  an incremented Number on both sides.
 
 ## Restrictions:
 - window hangs on long tasks (big files) and needs looooong to solve the task. -> read Apendix A
